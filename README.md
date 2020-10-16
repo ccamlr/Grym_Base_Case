@@ -1,6 +1,6 @@
 # Grym_Base_Case
 
-Base Case implementation of the Grym
+Base Case implementation of the Grym.
 
 ### A few points about this repository
 
