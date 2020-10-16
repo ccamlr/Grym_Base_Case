@@ -1,4 +1,4 @@
-# Grym_BaseCase
+# Grym_Base_Case
 
 Base Case implementation of the Grym
 
