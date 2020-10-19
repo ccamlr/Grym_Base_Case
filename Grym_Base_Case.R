@@ -29,10 +29,10 @@ Grym_dates=function(StartDate,MyDate){
 Nits=10000
 
 #Number of cores to use, type availableCores() to see what you've got
-Ncores=10
+Ncores=6
 
 #Gamma values to test
-Gammas=seq(0,0.1,by=0.01)
+Gammas=seq(0,0.1,by=0.001)
 
 #Reference Start Date:
 StartDate="01/10"
