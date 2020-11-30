@@ -10,23 +10,29 @@ KrillProjection <- function(
 	prRecruitPars=prRecruitParsGYM,	prRecruitsQuantile=prRecruitsQuantileGYM,	prRecruits=prRecruitsGYM, #recruitment functions
 	gamma=c(0,0.04,0.08,0.1),n.years=20 #Test details
 	) {
-
+  #create a sequence from 0-1 for each time step. The value is the proportion of that timestep in the year. 
 	Days <- seq(0,1,length=nsteps+1)
+	#The proportion of an individual time step in the year (0.002739726 for daily timesteps)
 	h <- 1/nsteps
-	## Spawning and monitoring interval
+	
+	## Spawning and monitoring interval are defined as inputs into the function. 
+	## Should be as timesteps eg 76:138
 	
 	## Ages, length at age and weight at age
-	ages <- outer(Days,Ages,FUN="+")
-	ls <- vonBertalanffyRAL(ages,t0=t0,K=K,Linf=Linf,f0=f0,f1=f1)
-	ws <- powerLW(ls,a=a,b=b)
+	ages <- outer(Days,Ages,FUN="+")#Ages of each age class for every timestep
+	ls <- vonBertalanffyRAL(ages,t0=t0,K=K,Linf=Linf,f0=f0,f1=f1)#length of each age class for every timestep
+	ws <- powerLW(ls,a=a,b=b)#weight of each age class for every timestep
+	
 	## Constant intra-annual natural mortality
-	ms <- matrix(1,nsteps+1,length(Ages))
-	Ms <- ctrapz(ms,h)
-	Msf <- final(Ms)
+	ms <- matrix(1,nsteps+1,length(Ages))#Proportion of mortality to apply for each timestep to each age class (if constant should all be one)
+	Ms <- ctrapz(ms,h)# Cumulative timestep proportional mortality 
+	Msf <- final(Ms)#Sum of mortality for each age class (if constant across ages, should all be one.)
+	
 	## Within year fishing pattern - season is first 90 days
-	fwy <- double(nsteps+1)
-	fwy[fishingI] <- 1
-	fwy <- fwy/mean(fwy)
+	fwy <- double(nsteps+1) #Sequence of 0s for the length of the year
+	fwy[fishingI] <- 1		#Set the fishing season increments to 1. 
+	fwy <- fwy/mean(fwy)  #Average the fishing mortality so the average is 1 across all increments.
+	
 	## Recruitment survey - parameters for the observed ratios
 	ps0 <- prRecruitPars(Msf,R.mean,R.var,r=R.class)
 	#B0logsd <- 0.2
@@ -35,21 +41,25 @@ KrillProjection <- function(
 	function(run) {
 		## Length based maturity and selectivity - ramp width is constant
 		## but the midpoint is selected uniformly from a range.
-		gs <- rampOgive(ls,runif(1,mat50Min,mat50Max),matrange)
-		ss <- rampOgive(ls,runif(1,sel50Min,sel50Max),selrange)
+		gs <- rampOgive(ls,runif(1,mat50Min,mat50Max),matrange) #Maturity ogive
+		ss <- rampOgive(ls,runif(1,sel50Min,sel50Max),selrange)  #Selectivity ogive
+		
 		## Construct fishing mortalities from season and selectivity
-		fs <- fwy*ss
-		Fs <- ctrapz(fs,h)
-		Fsf <- final(Fs)
+		fs <- fwy*ss #Age + time step fishing mortality
+		Fs <- ctrapz(fs,h) #Cumulative #Age + time step fishing mortality
+		Fsf <- final(Fs) #Final yearly fishing mortality for each age class.
+		
 		## Boostrap resample to account for uncertainty in R.mean and R.var
 		repeat {
-			Rbt <- prBootstrap(prRecruits,ps0,R.nsurveys,Msf,r=R.class)
-			ps <- tryCatch(prRecruitPars(Msf,R.mean,R.var,r=R.class),error=function(e) e)
+			Rbt <- prBootstrap(prRecruits,ps0,R.nsurveys,Msf,r=R.class) #bootstrapped recruitment mean and variance
+			ps <- tryCatch(prRecruitPars(Msf,R.mean,R.var,r=R.class),error=function(e) e) #resulting bootstrapped recruitment parameters
 			if(!inherits(ps,"error")) break
 		}
+		
 		## Natural mortalities from proprtional recruitment model
-		M <- ps$M
-		MMs <- M*Ms
+		M <- ps$M #Yearly M from bootstrapped recruitment 
+		MMs <- M*Ms #Timestep cumulative mortality for each age class. 
+		
 		## Median spawning biomass estimated from 1000 samples
 		R <- matrix(prRecruits(1000*length(Msf),ps),1000,length(Msf))
 		ssb0 <- spawningB0S(R,gs,ws,Ms,M,spawn=spawnI)$median
