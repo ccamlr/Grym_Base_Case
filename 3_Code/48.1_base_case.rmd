@@ -143,7 +143,7 @@ Running the assessment becomes a simple matter of doing `Project()` several time
 Setting `plan()` back to sequential tells R to stop parallel processing. 
 
 ```{r}
-Runs<-10000 #Set number of iterations
+Runs<-1000 #Set number of iterations
 
 plan(multiprocess, workers= availableCores()-2)
 df_48_1 <- future_map_dfr(1:Runs,Project,.options = furrr_options(seed = TRUE))
