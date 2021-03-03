@@ -1,7 +1,9 @@
 ---
 title: "Krill Assessment Base Case Subarea 48.1"
-author: "Dale Maschette"
-date: "03/11/2020"
+author:
+  - Dale Maschette, AAD
+  - Stephane Thanassekos, CCAMLR Secretariat
+date: "03/03/2021"
 output: html_document
 ---
 
@@ -12,11 +14,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
-Here we present a base case scenario for the Euphausia superba assessment within Subarea 48.1..... 
+Here we present a base case scenario for the *Euphausia superba* assessment within Subarea 48.1. The use of base cases was introduced during the WG-FSA 2020 online discussions (see 'Day 3 notes', [here](https://groups.ccamlr.org/node/497)):
+*The online discussion group agreed on the importance of developing a realistic first base case prior to investigating further refinements, in order to enable a comparison of outputs between the base case and more complex implementations.*
 
 
 
-```{r}
+```{r, message=FALSE,echo=FALSE}
 library(Grym)
 library(ggplot2)
 library(dplyr)
@@ -27,17 +30,17 @@ set.seed(31)
 
 
 # Initial parameters
-The initial parameters in this model are largely similar to those of assessments conducted in 2010 with some parameters updated with newer information. The model parameters fall into two broad catagories; 1) those that are derived from data, and 2) those which are decisions as a result of discussions or likely scenarios, for example fishing season or number of time steps.
+The initial parameters in this model are largely similar to those of assessments conducted in 2010 with some parameters updated with newer information. The model parameters fall into two broad categories; 1) those that are derived from data, and 2) those which are decisions as a result of discussions or likely scenarios, for example fishing season or number of time steps.
 
-We are wortking off a 365 day year and assume 8 age classes (0 - 7). 
+We are working off a 365 day year and assume 8 age classes (0 - 7). 
 
 ```{r}
 nsteps <- 365 #time steps
 Ages <- 0:7 #Age classes
 ```
 
-Intervals are based off the time steps from a reference date. Intervals can be checked with the `check_dates()` function in the Grym package. Here the assumed reference date is the 1st of October in each year, largely to allow for full summer growth. The year is largely irrelevant so long as 1) you are not using a leap year, and 2) you remember to progress a year if you are going to a month that falls before your reference date. 
-```{r}
+Intervals are based off the time steps from a reference date. Intervals can be checked with the `check_dates()` function in the Grym package. Here the assumed reference date is the 1st of October in each year, to capture the onset of spring/summer growth. The year is largely irrelevant so long as 1) you are not using a leap year, and 2) you remember to progress a year if you are going to a month that falls before your reference date. 
+```{r,message=FALSE}
 #reference date
 Reference<-"2021/10/01"
 #Spawning intervals
@@ -48,31 +51,32 @@ check_dates(Reference, "2022/01/01")
 check_dates(Reference, "2022/01/15")
 #Fishing intervals
 check_dates(Reference, "2022/09/30")
+```
 
-
+```{r}
 #Interval sequences
 spawnI	 <- 76:138
 monitorI <- 93:107
 fishingI <- 1:365
 ```
 
-This model uses proportional recruitment estimated with a beta distribution to generate random recruit numbers. For more details see `?prRecruitsGYM`. Inputs are estimated typically from surveys where mean and variance are the proportion of krill in each haul up to a reference age class. In this case the reference age class is 2 year olds, which makes them age class 3 in the model. 
+This model uses proportional recruitment estimated with a beta distribution to generate random recruit numbers. For more details see `?prRecruitsGYM`. Inputs are estimated typically from surveys where mean and variance are the proportion of krill in each haul up to a reference age class. In this case the reference age class is 2 year old, which makes them age class 3 in the model. 
 
 ```{r}
 #Recruitment Variables
-R.mean <- 0.557
-R.var <- 0.1^2
+R.mean <- 0.3
+R.var <- 0.2^2
 R.class <- 3
 R.nsurveys <- 17
 ```
 
-Growth is estimated using a von bertalanffy model and takes the typical inputs for estimating the curve (t0, Linf and K). Growth period is estimated using f0 and f1, unlike the intervals above which are between 1 and 365, the growth period is proportion of the year and is thus between 0 and 1. So a growth period beginning on the 12th increment would have an f0 value of `12/365` or `0.03287671`. 
+Growth is modeled using a seasonal von Bertalanffy model and takes the typical inputs for estimating the curve (t0, Linf and K). Growth period is estimated using f0 and f1, unlike the intervals above which are between 1 and 365, the growth period is proportion of the year and is thus between 0 and 1. So a growth period beginning on the 12th increment would have an f0 value of `12/365` or `0.03287671`. 
 
-```{r}
+```{r,message=FALSE}
 #Growth details 
 t0=0.0
-K=0.45
-Linf=60.8
+K=0.48
+Linf=60
 
 #Growth Period
 check_dates(Reference, "2021/10/21")
@@ -82,18 +86,19 @@ f0=21/365
 f1=135/365
 ```
 
-Length and weight relationship values come from the formula W=aL<sup>b</sup> where a gives the slope of the line and b provides the curvature. 
+Weight is computed from length using the formula W=aL<sup>b</sup>. 
 ```{r}
 #Length Weight
-a=1; b=3
+a=0.0043
+b=3.2446
 ```
 
 To provide variance in initial biomass estimates we provide a CV for the log Biomass estimate. 
 ```{r}
-B0logsd <- 0.2
+B0logsd <- mean(c(0.457,0.913))
 ```
 
-In each run, selectivity o-gives are fitted by selecting a value between the minimum and maximum estimates of 50% selectivity and then using the range to provide the lengths at which the curves will rise from 0, and reach 1, passing through the selected 50%. 
+In each run, selectivity ogives are fitted by selecting a value between the minimum and maximum estimates of 50% selectivity and then using the range to provide the lengths at which the curves will rise from 0, and reach 1, passing through the selected 50%. 
 ```{r}
 #Selectivity curve
 sel50Min<-30
@@ -101,12 +106,12 @@ sel50Max<-35
 selrange<-11
 ```
 
-In the same manner as selectivity, for each run maturity o-gives are fitted by selecting a value between the minimum and maximum estimates of 50% selectivity and then using the range to provide the lengths at which the curves will rise from 0, and reach 1, passing through the selected 50%. 
+In the same manner as selectivity, for each run maturity ogives are fitted by selecting a value between the minimum and maximum estimates of 50% selectivity and then using the range to provide the lengths at which the curves will rise from 0, and reach 1, passing through the selected 50%. 
 ```{r}
 #Maturity Curve
-mat50Min<-31
-mat50Max<-36
-matrange<-12
+mat50Min<-26
+mat50Max<-30
+matrange<-6
 ```
 
 # Running the model.
@@ -116,7 +121,7 @@ Now that the model parameters have been set, we load the `KrillProjection` funct
 source('Projection_function.R')
 ```
 
-We then put all our input parameters into the `KrillProjection` function (in this order) and create the `Project` function. Each time we run `Project()` is an individual run of the Grym and how we do our assessment. 
+We then put all our input parameters into the `KrillProjection` function (in this order) and create the `Project` function. Each time we run `Project()` an individual run of the Grym is executed.
 
 ```{r}
 Project<-KrillProjection(nsteps, Ages,					 #time step numbers and age classes
@@ -127,17 +132,18 @@ Project<-KrillProjection(nsteps, Ages,					 #time step numbers and age classes
 								 sel50Min,	sel50Max,	selrange,	 #Selectivity Parameters
 								 mat50Min,	mat50Max,	matrange,  #Maturity parameters
 								 B0logsd,
-								 gamma=c(0,0.04,0.08,0.1,0.139,0.15,0.2),n.years=20 #Test details
+								 gamma=seq(0,0.1,by=0.01),       #gammas to test
+								 n.years=20                      #Number of years
 								 )
 ```
 
-Running the assessment becomes a simple matter of doing `Project()` over and over again. To do this quickly we use `future_map_dfr()` from the furrr package. This lets use use parallel processing to significantly speed up the assessments. 
-`plan()` sets up the type of processing to be used (multiprocess) and the number or cores to be used (workers), which here we have set to the number of cores available-2. It is wise not to have the number of cores used >= the number of cores available. 
+Running the assessment becomes a simple matter of doing `Project()` several times. To do this quickly we use `future_map_dfr()` from the furrr package. This lets use use parallel processing to significantly speed up the assessments. 
+`plan()` sets up the type of processing to be used (multiprocess) and the number or cores to be used (workers), which here we have set to the number of cores available minus two. It is wise not to have the number of cores used >= the number of cores available. 
 
 Setting `plan()` back to sequential tells R to stop parallel processing. 
 
 ```{r}
-Runs<-201
+Runs<-10000 #Set number of iterations
 
 plan(multiprocess, workers= availableCores()-2)
 df_48_1 <- future_map_dfr(1:Runs,Project,.options = furrr_options(seed = TRUE))
