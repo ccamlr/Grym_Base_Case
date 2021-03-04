@@ -12,7 +12,7 @@
 <meta name="author" content="Dale Maschette, AAD" />
 <meta name="author" content="Stephane Thanassekos, CCAMLR Secretariat" />
 
-<meta name="date" content="2021-03-03" />
+<meta name="date" content="2021-04-03" />
 
 <title>Krill Assessment Base Case Subarea 48.1</title>
 
@@ -193,7 +193,7 @@ summary {
 <h1 class="title toc-ignore">Krill Assessment Base Case Subarea 48.1</h1>
 <h4 class="author">Dale Maschette, AAD</h4>
 <h4 class="author">Stephane Thanassekos, CCAMLR Secretariat</h4>
-<h4 class="date">03/03/2021</h4>
+<h4 class="date">04/03/2021</h4>
 
 </div>
 
@@ -205,7 +205,7 @@ summary {
 <div id="initial-parameters" class="section level1">
 <h1>Initial parameters</h1>
 <p>The initial parameters in this model are largely similar to those of assessments conducted in 2010 with some parameters updated with newer information. The model parameters fall into two broad categories; 1) those that are derived from data, and 2) those which are decisions as a result of discussions or likely scenarios, for example fishing season or number of time steps.</p>
-<p>We are working off a 365 day year and assume 8 age classes (0 - 7).</p>
+<p>We are working off a 365 day year and assume 8 age classes (0 - 7 yr).</p>
 <pre class="r"><code>nsteps &lt;- 365 #time steps
 Ages &lt;- 0:7 #Age classes</code></pre>
 <p>Intervals are based off the time steps from a reference date. Intervals can be checked with the <code>check_dates()</code> function in the Grym package. Here the assumed reference date is the 1st of October in each year, to capture the onset of spring/summer growth. The year is largely irrelevant so long as 1) you are not using a leap year, and 2) you remember to progress a year if you are going to a month that falls before your reference date.</p>
@@ -225,13 +225,14 @@ monitorI &lt;- 93:107
 fishingI &lt;- 1:365</code></pre>
 <p>This model uses proportional recruitment estimated with a beta distribution to generate random recruit numbers. For more details see <code>?prRecruitsGYM</code>. Inputs are estimated typically from surveys where mean and variance are the proportion of krill in each haul up to a reference age class. In this case the reference age class is 2 year old, which makes them age class 3 in the model.</p>
 <pre class="r"><code>#Recruitment Variables
-R.mean &lt;- 0.3
-R.var &lt;- 0.2^2
+R.mean &lt;- 0.425
+R.sd &lt;- 0.170
+R.var &lt;- R.sd^2
 R.class &lt;- 3
 R.nsurveys &lt;- 17</code></pre>
 <p>Growth is modeled using a seasonal von Bertalanffy model and takes the typical inputs for estimating the curve (t0, Linf and K). Growth period is estimated using f0 and f1, unlike the intervals above which are between 1 and 365, the growth period is proportion of the year and is thus between 0 and 1. So a growth period beginning on the 12th increment would have an f0 value of <code>12/365</code> or <code>0.03287671</code>.</p>
 <pre class="r"><code>#Growth details 
-t0=0.0
+t0=0
 K=0.48
 Linf=60
 
@@ -246,7 +247,7 @@ f1=135/365</code></pre>
 a=0.0043
 b=3.2446</code></pre>
 <p>To provide variance in initial biomass estimates we provide a CV for the log Biomass estimate.</p>
-<pre class="r"><code>B0logsd &lt;- mean(c(0.457,0.913))</code></pre>
+<pre class="r"><code>B0logsd &lt;- 0.457</code></pre>
 <p>In each run, selectivity ogives are fitted by selecting a value between the minimum and maximum estimates of 50% selectivity and then using the range to provide the lengths at which the curves will rise from 0, and reach 1, passing through the selected 50%.</p>
 <pre class="r"><code>#Selectivity curve
 sel50Min&lt;-30
@@ -271,15 +272,14 @@ matrange&lt;-6</code></pre>
                                  sel50Min,  sel50Max,   selrange,    #Selectivity Parameters
                                  mat50Min,  mat50Max,   matrange,  #Maturity parameters
                                  B0logsd,
-                                 gamma=seq(0,0.1,by=0.01),       #gammas to test
+                                 gamma=seq(0,0.15,by=0.01),      #gammas to test
                                  n.years=20                      #Number of years
                                  )</code></pre>
 <p>Running the assessment becomes a simple matter of doing <code>Project()</code> several times. To do this quickly we use <code>future_map_dfr()</code> from the furrr package. This lets use use parallel processing to significantly speed up the assessments. <code>plan()</code> sets up the type of processing to be used (multiprocess) and the number or cores to be used (workers), which here we have set to the number of cores available minus two. It is wise not to have the number of cores used &gt;= the number of cores available.</p>
 <p>Setting <code>plan()</code> back to sequential tells R to stop parallel processing.</p>
 <pre class="r"><code>Runs&lt;-10000 #Set number of iterations
-
 plan(multiprocess, workers= availableCores()-2)
-df_48_1 &lt;- future_map_dfr(1:Runs,Project,.options = furrr_options(seed = TRUE))
+df_48_1 &lt;- future_map_dfr(1:Runs,Project,.options = furrr_options(seed = TRUE),.progress=T)
 plan(sequential)</code></pre>
 <p>Save the Grym output for record.</p>
 <pre class="r"><code>saveRDS(df_48_1, file=&quot;48.1_Grym_output.rds&quot;)</code></pre>
@@ -298,27 +298,32 @@ plan(sequential)</code></pre>
     summarize(Pr=mean(Dep &lt; 0.2))</code></pre>
 <pre><code>## `summarise()` has grouped output by &#39;Gamma&#39;. You can override using the `.groups` argument.</code></pre>
 <pre class="r"><code>Gamma1</code></pre>
-<pre><code>## # A tibble: 11 x 2
+<pre><code>## # A tibble: 16 x 2
 ##    Gamma     Pr
 ##  * &lt;dbl&gt;  &lt;dbl&gt;
-##  1  0    0.0032
-##  2  0.01 0.0071
-##  3  0.02 0.0224
-##  4  0.03 0.0472
-##  5  0.04 0.0806
-##  6  0.05 0.121 
-##  7  0.06 0.164 
-##  8  0.07 0.208 
-##  9  0.08 0.251 
-## 10  0.09 0.294 
-## 11  0.1  0.335</code></pre>
+##  1  0    0     
+##  2  0.01 0     
+##  3  0.02 0.0002
+##  4  0.03 0.0028
+##  5  0.04 0.0092
+##  6  0.05 0.0188
+##  7  0.06 0.0372
+##  8  0.07 0.0618
+##  9  0.08 0.0945
+## 10  0.09 0.129 
+## 11  0.1  0.167 
+## 12  0.11 0.205 
+## 13  0.12 0.249 
+## 14  0.13 0.296 
+## 15  0.14 0.339 
+## 16  0.15 0.379</code></pre>
 <pre class="r"><code>#Given the gamma values tested, gamma 1 is:
 Gamma_1 &lt;- max(Gamma1$Gamma[Gamma1$Pr&lt;=0.1])
 Gamma_1</code></pre>
-<pre><code>## [1] 0.04</code></pre>
+<pre><code>## [1] 0.08</code></pre>
 <pre class="r"><code>#What is the approximate Gamma that meets 10% depletion to test.
 approx(Gamma1$Pr,Gamma1$Gamma,0.1)$y</code></pre>
-<pre><code>## [1] 0.0448139</code></pre>
+<pre><code>## [1] 0.08158501</code></pre>
 <p>gamma2:</p>
 <pre class="r"><code>#Gamma 2:
 Gamma2 &lt;- df_48_1 %&gt;%  group_by(Gamma) %&gt;% 
@@ -328,26 +333,31 @@ Gamma2 &lt;- df_48_1 %&gt;%  group_by(Gamma) %&gt;%
 Gamma2$Escapement&lt;-Gamma2$ssb/Gamma2$ssb0
 
 Gamma2</code></pre>
-<pre><code>## # A tibble: 11 x 4
+<pre><code>## # A tibble: 16 x 4
 ##    Gamma   ssb  ssb0 Escapement
 ##    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt;
-##  1  0    2365. 2369.      0.998
-##  2  0.01 2289. 2369.      0.966
-##  3  0.02 2210. 2369.      0.933
-##  4  0.03 2126. 2369.      0.897
-##  5  0.04 2037. 2369.      0.860
-##  6  0.05 1955. 2369.      0.825
-##  7  0.06 1870. 2369.      0.789
-##  8  0.07 1777. 2369.      0.750
-##  9  0.08 1695. 2369.      0.715
-## 10  0.09 1603. 2369.      0.676
-## 11  0.1  1508. 2369.      0.637</code></pre>
+##  1  0     973.  973.      1.00 
+##  2  0.01  947.  973.      0.974
+##  3  0.02  922.  973.      0.948
+##  4  0.03  896.  973.      0.921
+##  5  0.04  870.  973.      0.895
+##  6  0.05  844.  973.      0.867
+##  7  0.06  819.  973.      0.842
+##  8  0.07  792.  973.      0.815
+##  9  0.08  765.  973.      0.786
+## 10  0.09  737.  973.      0.758
+## 11  0.1   707.  973.      0.726
+## 12  0.11  677.  973.      0.696
+## 13  0.12  647.  973.      0.665
+## 14  0.13  616.  973.      0.633
+## 15  0.14  585.  973.      0.602
+## 16  0.15  553.  973.      0.569</code></pre>
 <pre class="r"><code>#Given the gamma values tested, gamma 2 is:
 Gamma_2&lt;-max(Gamma2$Gamma[Gamma2$Escapement&gt;=0.75])
 
 #What is the approximate Gamma that meets 75% escapement to test.
 approx(Gamma2$Escapement,Gamma2$Gamma,0.75)$y</code></pre>
-<pre><code>## [1] 0.06997782</code></pre>
+<pre><code>## [1] 0.09247155</code></pre>
 <p>Select the gamma which is lowest.</p>
 <pre class="r"><code>#The actual Gamma is the smallest of the two gammas:
 GammaToUse&lt;-which(c(Gamma_1,Gamma_2)==min(Gamma_1,Gamma_2)) #Which gamma is min?
@@ -355,7 +365,7 @@ if(length(GammaToUse)==2){GammaToUse=3} #when gamma1 and gamma2 are equal
 OUT&lt;-cbind(Gamma_1,Gamma_2,GammaToUse)
 OUT</code></pre>
 <pre><code>##      Gamma_1 Gamma_2 GammaToUse
-## [1,]    0.04    0.06          1</code></pre>
+## [1,]    0.08    0.09          1</code></pre>
 </div>
 
 

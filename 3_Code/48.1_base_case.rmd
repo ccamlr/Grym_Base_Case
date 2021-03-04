@@ -96,7 +96,7 @@ b=3.2446
 
 To provide variance in initial biomass estimates we provide a CV for the log Biomass estimate. 
 ```{r}
-B0logsd <- 0.913
+B0logsd <- 0.457
 ```
 
 In each run, selectivity ogives are fitted by selecting a value between the minimum and maximum estimates of 50% selectivity and then using the range to provide the lengths at which the curves will rise from 0, and reach 1, passing through the selected 50%. 
@@ -133,7 +133,7 @@ Project<-KrillProjection(nsteps, Ages,					 #time step numbers and age classes
 								 sel50Min,	sel50Max,	selrange,	 #Selectivity Parameters
 								 mat50Min,	mat50Max,	matrange,  #Maturity parameters
 								 B0logsd,
-								 gamma=seq(0,0.12,by=0.01),      #gammas to test
+								 gamma=seq(0,0.15,by=0.01),      #gammas to test
 								 n.years=20                      #Number of years
 								 )
 ```
