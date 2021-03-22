@@ -2,6 +2,7 @@
 title: "Krill Assessment Base Case Subarea 48.1"
 author:
   - Dale Maschette, AAD
+  - Simon Wotherspoon, UTAS
   - Stephane Thanassekos, CCAMLR Secretariat
 date: "04/03/2021"
 output: html_document
@@ -96,7 +97,7 @@ b=3.2446
 
 To provide variance in initial biomass estimates we provide a CV for the log Biomass estimate. 
 ```{r}
-B0logsd <- 0.457
+B0logsd <- 0.913
 ```
 
 In each run, selectivity ogives are fitted by selecting a value between the minimum and maximum estimates of 50% selectivity and then using the range to provide the lengths at which the curves will rise from 0, and reach 1, passing through the selected 50%. 

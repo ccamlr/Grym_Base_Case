@@ -52,7 +52,7 @@ KrillProjection <- function(
 		## Boostrap resample to account for uncertainty in R.mean and R.var
 		repeat {
 			Rbt <- prBootstrap(prRecruits,ps0,R.nsurveys,Msf,r=R.class) #bootstrapped recruitment mean and variance
-			ps <- tryCatch(prRecruitPars(Msf,R.mean,R.var,r=R.class),error=function(e) e) #resulting bootstrapped recruitment parameters
+			ps <- tryCatch(prRecruitPars(Msf,Rbt$mnR,Rbt$vrR,r=R.class),error=function(e) e) #resulting bootstrapped recruitment parameters
 			if(!inherits(ps,"error")) break
 		}
 		
