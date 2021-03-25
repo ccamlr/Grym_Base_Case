@@ -51,7 +51,7 @@ The following applies to any repository but is here described for the Grym base 
 
 On that repository’s page, go to ‘Code’ and ‘download ZIP’:
  
-![](https://github.com/ccamlr/Grym_Base_Case/tree/master/Readme Images/Readme_img00.png)
+![](https://github.com/ccamlr/Grym_Base_Case/tree/master/Readme_Images/Readme_img00.png)
 
 Extract the contents of that zip file on your computer. In the folder ‘Grym_Base_Case-master’ you will find an R project file named ‘Grym_Base_Case.Rproj’:
 
