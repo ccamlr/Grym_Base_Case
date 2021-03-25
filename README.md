@@ -47,13 +47,11 @@ You may then go to that location in your computer (outside of R Studio), and in 
 
 ### 4.	Download a repository from GitHub
 
-The following applies to any repository but is here described for the Grym base case, here: https://github.com/ccamlr/Grym_Base_Case
-
-On that repository’s page, go to ‘Code’ and ‘download ZIP’:
+At the top of this page, go to ‘Code’ and ‘download ZIP’:
  
 ![](https://raw.githubusercontent.com/ccamlr/Grym_Base_Case/master/Readme_Images/Readme_img00.png)
 
-Extract the contents of that zip file on your computer. In the folder ‘Grym_Base_Case-master’ you will find an R project file named ‘Grym_Base_Case.Rproj’:
+Extract the contents of that zip file on your computer. In the resulting folder you will find an R project file named ‘Grym_Base_Case.Rproj’:
 
 ![](https://raw.githubusercontent.com/ccamlr/Grym_Base_Case/master/Readme_Images/Readme_img02.png)
  
@@ -63,7 +61,7 @@ Double click on that file. You are now inside the “Grym_Base_Case” R project
  
 Whenever you wish to use the scripts contained in this repository, it is crucial to first open the R project file named “Grym_Base_Case.Rproj”. This will ensure that R Studio knows where all the files are.
 
-Once inside the project, you may now run some simulations. Go to the file browser inside R studio and click on ‘3_Code’:
+Once inside the project, you may now run some simulations. Go to the file browser inside R studio and click on "3_Code":
  
 ![](https://raw.githubusercontent.com/ccamlr/Grym_Base_Case/master/Readme_Images/Readme_img03.png)
 
