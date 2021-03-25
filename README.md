@@ -55,27 +55,27 @@ On that repository’s page, go to ‘Code’ and ‘download ZIP’:
 
 Extract the contents of that zip file on your computer. In the folder ‘Grym_Base_Case-master’ you will find an R project file named ‘Grym_Base_Case.Rproj’:
 
-![](Readme Images/Readme_img02.png)
+![](https://raw.githubusercontent.com/ccamlr/Grym_Base_Case/master/Readme_Images/Readme_img02.png)
  
 Double click on that file. You are now inside the “Grym_Base_Case” R project, as shown by the icon at the top right corner of R Studio:
  
-![](Readme Images/Readme_img01.png)
+![](https://raw.githubusercontent.com/ccamlr/Grym_Base_Case/master/Readme_Images/Readme_img01.png)
  
 Whenever you wish to use the scripts contained in this repository, it is crucial to first open the R project file named “Grym_Base_Case.Rproj”. This will ensure that R Studio knows where all the files are.
 
 Once inside the project, you may now run some simulations. Go to the file browser inside R studio and click on ‘3_Code’:
  
-![](Readme Images/Readme_img03.png)
+![](https://raw.githubusercontent.com/ccamlr/Grym_Base_Case/master/Readme_Images/Readme_img03.png)
 
 The code is embedded in an Rmarkdown file named “48.1_base_case.rmd”. Click on it, it will open inside R studio. 
 Prior to running your first test, it is recommended to do a simulation with few runs otherwise it might take a long time. Inside the markdown, navigate to the line where the number of runs is set:
 
-![](Readme Images/Readme_img04.png)
+![](https://raw.githubusercontent.com/ccamlr/Grym_Base_Case/master/Readme_Images/Readme_img04.png)
  
 And change to `Runs<-100`, for example. Then save.
 To execute the code, you must ‘knit’ the markdown, by clicking on the knit button:
 
-![](Readme Images/Readme_img05.png)
+![](https://raw.githubusercontent.com/ccamlr/Grym_Base_Case/master/Readme_Images/Readme_img05.png)
 
 Once the knitting process is finished, the result is shown in a pop-up window (48.1_base_case.html).
 
