@@ -255,7 +255,7 @@ matrange&lt;-6</code></pre>
                                  )</code></pre>
 <p>Running the assessment becomes a simple matter of doing <code>Project()</code> several times. To do this quickly we use <code>future_map_dfr()</code> from the furrr package. This lets use use parallel processing to significantly speed up the assessments. <code>plan()</code> sets up the type of processing to be used (multiprocess) and the number or cores to be used (workers), which here we have set to the number of cores available minus two. It is wise not to have the number of cores used &gt;= the number of cores available.</p>
 <p>Setting <code>plan()</code> back to sequential tells R to stop parallel processing.</p>
-<pre class="r"><code>Runs&lt;-10 #Set number of iterations
+<pre class="r"><code>Runs&lt;-10000 #Set number of iterations
 plan(multiprocess, workers= availableCores()-2)
 df_48_1 &lt;- future_map_dfr(1:Runs,Project,.options = furrr_options(seed = TRUE),.progress=T)
 plan(sequential)</code></pre>
@@ -277,31 +277,31 @@ plan(sequential)</code></pre>
 <pre><code>## `summarise()` has grouped output by &#39;Gamma&#39;. You can override using the `.groups` argument.</code></pre>
 <pre class="r"><code>Gamma1</code></pre>
 <pre><code>## # A tibble: 16 x 2
-##    Gamma    Pr
-##    &lt;dbl&gt; &lt;dbl&gt;
-##  1  0      0  
-##  2  0.01   0  
-##  3  0.02   0  
-##  4  0.03   0.1
-##  5  0.04   0.1
-##  6  0.05   0.2
-##  7  0.06   0.2
-##  8  0.07   0.2
-##  9  0.08   0.2
-## 10  0.09   0.2
-## 11  0.1    0.3
-## 12  0.11   0.3
-## 13  0.12   0.3
-## 14  0.13   0.3
-## 15  0.14   0.4
-## 16  0.15   0.4</code></pre>
+##    Gamma     Pr
+##    &lt;dbl&gt;  &lt;dbl&gt;
+##  1  0    0.0009
+##  2  0.01 0.0028
+##  3  0.02 0.0105
+##  4  0.03 0.0248
+##  5  0.04 0.045 
+##  6  0.05 0.0678
+##  7  0.06 0.0949
+##  8  0.07 0.120 
+##  9  0.08 0.148 
+## 10  0.09 0.175 
+## 11  0.1  0.203 
+## 12  0.11 0.232 
+## 13  0.12 0.258 
+## 14  0.13 0.281 
+## 15  0.14 0.305 
+## 16  0.15 0.326</code></pre>
 <pre class="r"><code>#Given the gamma values tested, gamma 1 is:
 Gamma_1 &lt;- max(Gamma1$Gamma[Gamma1$Pr&lt;=0.1])
 Gamma_1</code></pre>
-<pre><code>## [1] 0.04</code></pre>
+<pre><code>## [1] 0.06</code></pre>
 <pre class="r"><code>#What is the approximate Gamma that meets 10% depletion to test.
 approx(Gamma1$Pr,Gamma1$Gamma,0.1)$y</code></pre>
-<pre><code>## [1] 0.035</code></pre>
+<pre><code>## [1] 0.06200787</code></pre>
 <p>gamma2:</p>
 <pre class="r"><code>#Gamma 2:
 Gamma2 &lt;- df_48_1 %&gt;%  group_by(Gamma) %&gt;% 
@@ -314,28 +314,28 @@ Gamma2</code></pre>
 <pre><code>## # A tibble: 16 x 4
 ##    Gamma   ssb  ssb0 Escapement
 ##    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt;
-##  1  0    1357. 1095.      1.24 
-##  2  0.01 1336. 1095.      1.22 
-##  3  0.02 1300. 1095.      1.19 
-##  4  0.03 1241. 1095.      1.13 
-##  5  0.04 1232. 1095.      1.13 
-##  6  0.05 1222. 1095.      1.12 
-##  7  0.06 1205. 1095.      1.10 
-##  8  0.07 1175. 1095.      1.07 
-##  9  0.08 1092. 1095.      0.997
-## 10  0.09 1065. 1095.      0.973
-## 11  0.1  1039. 1095.      0.949
-## 12  0.11 1011. 1095.      0.923
-## 13  0.12  981. 1095.      0.897
-## 14  0.13  950. 1095.      0.868
-## 15  0.14  920. 1095.      0.841
-## 16  0.15  883. 1095.      0.807</code></pre>
+##  1  0     988.  960.      1.03 
+##  2  0.01  961.  960.      1.00 
+##  3  0.02  932.  960.      0.971
+##  4  0.03  907.  960.      0.944
+##  5  0.04  879.  960.      0.915
+##  6  0.05  854.  960.      0.889
+##  7  0.06  827.  960.      0.861
+##  8  0.07  803.  960.      0.836
+##  9  0.08  775.  960.      0.807
+## 10  0.09  750.  960.      0.781
+## 11  0.1   726.  960.      0.756
+## 12  0.11  701.  960.      0.730
+## 13  0.12  677.  960.      0.705
+## 14  0.13  653.  960.      0.680
+## 15  0.14  629.  960.      0.656
+## 16  0.15  609.  960.      0.634</code></pre>
 <pre class="r"><code>#Given the gamma values tested, gamma 2 is:
 Gamma_2&lt;-max(Gamma2$Gamma[Gamma2$Escapement&gt;=0.75])
 
 #What is the approximate Gamma that meets 75% escapement to test.
 approx(Gamma2$Escapement,Gamma2$Gamma,0.75)$y</code></pre>
-<pre><code>## [1] NA</code></pre>
+<pre><code>## [1] 0.1021644</code></pre>
 <p>Select the gamma which is lowest.</p>
 <pre class="r"><code>#The actual Gamma is the smallest of the two gammas:
 GammaToUse&lt;-which(c(Gamma_1,Gamma_2)==min(Gamma_1,Gamma_2)) #Which gamma is min?
@@ -343,7 +343,7 @@ if(length(GammaToUse)==2){GammaToUse=3} #when gamma1 and gamma2 are equal
 OUT&lt;-cbind(Gamma_1,Gamma_2,GammaToUse)
 OUT</code></pre>
 <pre><code>##      Gamma_1 Gamma_2 GammaToUse
-## [1,]    0.04    0.15          1</code></pre>
+## [1,]    0.06     0.1          1</code></pre>
 </div>
 
 
