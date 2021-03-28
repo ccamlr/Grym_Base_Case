@@ -45,6 +45,16 @@ Additional examples are located inside the Grym package directory. To find its l
 
 You may then go to that location in your computer (outside of R Studio), and in the ‘examples’ subfolder, you will find the "Examples.html" file which contains further useful documentation.
 
+You may also be interested in particular functions used within the Grym; to access help files for functions, type in the Console (for example, for the function *project()*):
+
+`?project`
+
+If you wish to see the source code of a function, type:
+
+`View(project)`
+
+
+
 ### 4.	Download a repository from GitHub
 
 At the top of this page, go to ‘Code’ and ‘download ZIP’:
