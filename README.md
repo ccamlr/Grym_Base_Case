@@ -91,6 +91,9 @@ Once the knitting process is finished, the result is shown in a pop-up window (4
 
 Because the repository will change over time, you must keep your version, on your computer, up to date. To update your repository, Simply re-download it as per Section 4 instructions.
 
+<br>
+
+<br>
 
 
 #### A few points about this repository
@@ -102,20 +105,16 @@ The reason for this structure is:
   2. Having each Subarea in their own Rmarkdown means that we can work on getting one area right first explaining where its values come from and how they are calculated and then quickly rolling it out to the other Subareas, it also means you can quickly test other implementations by only applying them to a single area first and making modifications where needed before rolling them out to other areas. 
   3. Finally having an overarching file means you can run all the subareas at once when you are happy with your models and have them in one document.  
   
-- The Data folder contains data used for estimating parameters where it is publicly available. 
+- The folder '2_Parameters' contains some preliminary parameter values. 
 
-- The folder Parameters contains some preliminary parameter values, as discussed during EMM. This folder will be updated with the code and parameter values as they are calculated and discussed within issue #1. 
+- The folder '3_Code' contains the `Projection_function.R` file and the Subarea-specific markdowns when they have been developed. 
 
-- The Code folder will contain the `Projection_function.R` file and the Subarea specific markdowns when they have been developed. 
-
-- The Old_not_used folder contains old code which is not being used for varying reasons and may contain errors. 
 
 #### About the code as it is now
 
 - The `Projection_function.R` as it is now will produce consistent results with the 2010 example when given the same input values. 
 - The function itself could use some more comments on what is happening at each step and Simon and Dale will work on that soon. 
 - Naming conventions have tried to stay consistent with the examples in the GrymExamples package as much as possible. - There is two flow charts in the flow-charts.html which are a work in progress (the colors need fixing) which show in both overly simplified, and very detailed, how the Grym is constructed in `KrillProjection` function. 
-
 - Having started with 48.1 the `48.1_base_case.rmd` provides detailed steps for each of the parameter inputs to the projections, but the overall document is still a work in progress.
-- The rest of the Subareas will be implemented very quickly once the table in issue #1 is completed. 
+- The rest of the Subareas will be implemented once agreement over parameter values has been reached. 
 

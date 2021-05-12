@@ -224,6 +224,8 @@ pre code {
 <div id="keeping-your-repository-up-to-date" class="section level3">
 <h3>5. Keeping your repository up to date</h3>
 <p>Because the repository will change over time, you must keep your version, on your computer, up to date. To update your repository, Simply re-download it as per Section 4 instructions.</p>
+<p><br></p>
+<p><br></p>
 <div id="a-few-points-about-this-repository" class="section level4">
 <h4>A few points about this repository</h4>
 </div>
@@ -232,20 +234,18 @@ pre code {
 <p>The code is designed to work in three tiers, at the bottom is the <code>Projection_function.R</code>, in the middle is an Rmarkdown for each Subarea (e.g. <code>48.1_base_case.rmd</code>), and at the top is an Rmarkdown which pulls together each Subarea Rmarkdown into one document.</p>
 <p>The reason for this structure is: 1. The <code>Projection_function.R</code> contains the <code>KrillProjection()</code> function that will be used for each run of the Grym and has no hard coded or default biological parameter values. Once the base cases are done, in order to try different implementations this file would just need to be copied and renamed and then the <code>KrillProjection()</code> function modified for the desired implementation which is then easily passed up to each Subarea assessment. 2. Having each Subarea in their own Rmarkdown means that we can work on getting one area right first explaining where its values come from and how they are calculated and then quickly rolling it out to the other Subareas, it also means you can quickly test other implementations by only applying them to a single area first and making modifications where needed before rolling them out to other areas. 3. Finally having an overarching file means you can run all the subareas at once when you are happy with your models and have them in one document.</p>
 <ul>
-<li><p>The Data folder contains data used for estimating parameters where it is publicly available.</p></li>
-<li><p>The folder Parameters contains some preliminary parameter values, as discussed during EMM. This folder will be updated with the code and parameter values as they are calculated and discussed within issue #1.</p></li>
-<li><p>The Code folder will contain the <code>Projection_function.R</code> file and the Subarea specific markdowns when they have been developed.</p></li>
-<li><p>The Old_not_used folder contains old code which is not being used for varying reasons and may contain errors.</p></li>
+<li><p>The folder ‘2_Parameters’ contains some preliminary parameter values.</p></li>
+<li><p>The folder ‘3_Code’ contains the <code>Projection_function.R</code> file and the Subarea-specific markdowns when they have been developed.</p></li>
 </ul>
 </div>
 <div id="about-the-code-as-it-is-now" class="section level4">
 <h4>About the code as it is now</h4>
 <ul>
-<li><p>The <code>Projection_function.R</code> as it is now will produce consistent results with the 2010 example when given the same input values.</p></li>
-<li><p>The function itself could use some more comments on what is happening at each step and Simon and Dale will work on that soon.</p></li>
-<li><p>Naming conventions have tried to stay consistent with the examples in the GrymExamples package as much as possible. - There is two flow charts in the flow-charts.html which are a work in progress (the colors need fixing) which show in both overly simplified, and very detailed, how the Grym is constructed in <code>KrillProjection</code> function.</p></li>
-<li><p>Having started with 48.1 the <code>48.1_base_case.rmd</code> provides detailed steps for each of the parameter inputs to the projections, but the overall document is still a work in progress.</p></li>
-<li><p>The rest of the Subareas will be implemented very quickly once the table in issue #1 is completed.</p></li>
+<li>The <code>Projection_function.R</code> as it is now will produce consistent results with the 2010 example when given the same input values.</li>
+<li>The function itself could use some more comments on what is happening at each step and Simon and Dale will work on that soon.</li>
+<li>Naming conventions have tried to stay consistent with the examples in the GrymExamples package as much as possible. - There is two flow charts in the flow-charts.html which are a work in progress (the colors need fixing) which show in both overly simplified, and very detailed, how the Grym is constructed in <code>KrillProjection</code> function.</li>
+<li>Having started with 48.1 the <code>48.1_base_case.rmd</code> provides detailed steps for each of the parameter inputs to the projections, but the overall document is still a work in progress.</li>
+<li>The rest of the Subareas will be implemented once agreement over parameter values has been reached.</li>
 </ul>
 </div>
 </div>
