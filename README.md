@@ -9,7 +9,9 @@ The base cases will be performed using the same basic configuration as the asses
 
 The idea for having a base case is to essentially have assessments that are ready for management advice using previously agreed upon configurations available for WG-EMM-2021. They will provide the infrastructure for other implementations to be explored (such as RecMaker recruitment, different recruitment functions etc.) whilst still having assessments for each Subarea ready to go should these different implementations not be ready in time for WG-EMM-2021. 
 
+<br>
 
+A short video describing how the Grym will be used to determine sustainable yield is available [here](https://youtu.be/jekkTxbo_r8).
 
 
 ## Grym package installation and use instructions
