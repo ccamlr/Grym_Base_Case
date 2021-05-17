@@ -55,6 +55,34 @@ If you wish to see the source code of a function, type:
 
 `View(project)`
 
+<br>
+
+In addition to the documents and tutorials mentioned above, the following video tutorials are available:
+
+__Video 1__:  https://youtu.be/JPWauYbmzB0
+
+Title: Grym (R implementation of the Generalized Yield Model) tutorial 1.
+
+Description: Principals of the model, how cohorts move through time and age. Presented by Simon Wotherspoon (UTAS).
+
+<br>
+
+__Video 2__: https://youtu.be/AnLEUxyCwB8
+
+Title: Grym (R implementation of the Generalized Yield Model) tutorial 2.
+
+Description: The ‘Krill 1996’ example, structure of the code. Presented by Simon Wotherspoon (UTAS).
+
+<br>
+
+__Video 3__: https://youtu.be/2TT15v-9oNw
+
+Title: Grym (R implementation of the Generalized Yield Model) tutorial 3.
+
+Description: The ‘Krill 1996’ example, step by step execution. Presented by Simon Wotherspoon (UTAS).
+
+<br>
+
 
 
 ### 4.	Download a repository from GitHub
