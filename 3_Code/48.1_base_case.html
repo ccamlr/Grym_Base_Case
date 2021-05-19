@@ -219,9 +219,9 @@ check_dates(Reference, &quot;2022/02/12&quot;)
 f0=21/365
 f1=135/365</code></pre>
 <p>Weight is computed from length using the formula W=aL<sup>b</sup>.</p>
-<pre class="r"><code>#Length Weight
-a=0.0043
-b=3.2446</code></pre>
+<pre class="r"><code>#Length Weight (cm to g, values from synoptic survey)
+a=2.236e-06
+b=3.314</code></pre>
 <p>To provide variance in initial biomass estimates we provide a CV for the log Biomass estimate.</p>
 <pre class="r"><code>B0logsd &lt;- 0.685</code></pre>
 <p>In each run, selectivity ogives are fitted by selecting a value between the minimum and maximum estimates of 50% selectivity and then using the range to provide the lengths at which the curves will rise from 0, and reach 1, passing through the selected 50%.</p>
@@ -280,26 +280,26 @@ plan(sequential)</code></pre>
 ##  1  0    0.0009
 ##  2  0.01 0.0021
 ##  3  0.02 0.0068
-##  4  0.03 0.0156
-##  5  0.04 0.0304
-##  6  0.05 0.0516
-##  7  0.06 0.0795
-##  8  0.07 0.107 
+##  4  0.03 0.0157
+##  5  0.04 0.0303
+##  6  0.05 0.0515
+##  7  0.06 0.0796
+##  8  0.07 0.108 
 ##  9  0.08 0.142 
-## 10  0.09 0.175 
-## 11  0.1  0.210 
-## 12  0.11 0.242 
-## 13  0.12 0.274 
-## 14  0.13 0.307 
-## 15  0.14 0.337 
-## 16  0.15 0.370</code></pre>
+## 10  0.09 0.176 
+## 11  0.1  0.21  
+## 12  0.11 0.243 
+## 13  0.12 0.275 
+## 14  0.13 0.308 
+## 15  0.14 0.338 
+## 16  0.15 0.372</code></pre>
 <pre class="r"><code>#Given the gamma values tested, gamma 1 is:
 Gamma_1 &lt;- max(Gamma1$Gamma[Gamma1$Pr&lt;=0.1])
 Gamma_1</code></pre>
 <pre><code>## [1] 0.06</code></pre>
 <pre class="r"><code>#What is the approximate Gamma that meets 10% depletion to test.
 approx(Gamma1$Pr,Gamma1$Gamma,0.1)$y</code></pre>
-<pre><code>## [1] 0.06742754</code></pre>
+<pre><code>## [1] 0.0671831</code></pre>
 <p>gamma2:</p>
 <pre class="r"><code>#Gamma 2:
 Gamma2 &lt;- df_48_1 %&gt;%  group_by(Gamma) %&gt;% 
@@ -312,28 +312,28 @@ Gamma2</code></pre>
 <pre><code>## # A tibble: 16 x 4
 ##    Gamma   ssb  ssb0 Escapement
 ##    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt;
-##  1  0     988.  960.      1.03 
-##  2  0.01  962.  960.      1.00 
-##  3  0.02  934.  960.      0.973
-##  4  0.03  906.  960.      0.944
-##  5  0.04  877.  960.      0.913
-##  6  0.05  848.  960.      0.883
-##  7  0.06  820.  960.      0.854
-##  8  0.07  790.  960.      0.823
-##  9  0.08  760.  960.      0.792
-## 10  0.09  730.  960.      0.760
-## 11  0.1   701.  960.      0.730
-## 12  0.11  671.  960.      0.698
-## 13  0.12  642.  960.      0.669
-## 14  0.13  613.  960.      0.639
-## 15  0.14  586.  960.      0.610
-## 16  0.15  562.  960.      0.585</code></pre>
+##  1  0    0.671 0.652      1.03 
+##  2  0.01 0.653 0.652      1.00 
+##  3  0.02 0.634 0.652      0.972
+##  4  0.03 0.616 0.652      0.944
+##  5  0.04 0.595 0.652      0.912
+##  6  0.05 0.576 0.652      0.883
+##  7  0.06 0.556 0.652      0.853
+##  8  0.07 0.536 0.652      0.821
+##  9  0.08 0.515 0.652      0.789
+## 10  0.09 0.495 0.652      0.759
+## 11  0.1  0.474 0.652      0.727
+## 12  0.11 0.454 0.652      0.696
+## 13  0.12 0.434 0.652      0.666
+## 14  0.13 0.415 0.652      0.637
+## 15  0.14 0.396 0.652      0.606
+## 16  0.15 0.379 0.652      0.581</code></pre>
 <pre class="r"><code>#Given the gamma values tested, gamma 2 is:
 Gamma_2&lt;-max(Gamma2$Gamma[Gamma2$Escapement&gt;=0.75])
 
 #What is the approximate Gamma that meets 75% escapement to test.
 approx(Gamma2$Escapement,Gamma2$Gamma,0.75)$y</code></pre>
-<pre><code>## [1] 0.09335364</code></pre>
+<pre><code>## [1] 0.09279616</code></pre>
 <p>Select the gamma which is lowest.</p>
 <pre class="r"><code>#The actual Gamma is the smallest of the two gammas:
 GammaToUse&lt;-which(c(Gamma_1,Gamma_2)==min(Gamma_1,Gamma_2)) #Which gamma is min?
