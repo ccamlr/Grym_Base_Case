@@ -88,7 +88,7 @@ f1=135/365
 
 Weight is computed from length using the formula W=aL<sup>b</sup>. 
 ```{r}
-#Length Weight (cm to g, values from synoptic survey)
+#Length Weight (mm to g, values from synoptic survey)
 #Ref: https://www.ccamlr.org/en/system/files/meeting_documents/with_cover/asam-2019-08r1.pdf (Appendix C)
 a=2.236e-06
 b=3.314
