@@ -16,7 +16,9 @@ knitr::opts_chunk$set(echo = TRUE)
 # Introduction
 
 Here we present a base case scenario for the *Euphausia superba* assessment within Subarea 48.1. The use of base cases was introduced during the WG-FSA 2020 online discussions (see 'Day 3 notes', [here](https://groups.ccamlr.org/node/497)):
-*The online discussion group agreed on the importance of developing a realistic first base case prior to investigating further refinements, in order to enable a comparison of outputs between the base case and more complex implementations.*
+*WG-SAM-21 and WG-EMM-21 agreed upon developing a realistic first base case prior to investigating further refinements, in order to enable a comparison of outputs between the base case and more complex implementations.*
+
+This base case uses the parameters agreed upon by WG-EMM-2021 as presented in Table 1. 
 
 
 
@@ -63,10 +65,10 @@ This model uses proportional recruitment estimated with a beta distribution to g
 
 ```{r}
 #Recruitment Variables
-R.mean <- 0.425 #481S (CCAMLR Secretariat, 2021)
-R.sd <- 0.170   #481S (CCAMLR Secretariat, 2021)
+R.mean <- 0.557 
+R.sd <- 0.126
 R.var <- R.sd^2
-R.class <- 3
+R.class <- 2
 R.nsurveys <- 17
 ```
 
@@ -88,15 +90,13 @@ f1=135/365
 
 Weight is computed from length using the formula W=aL<sup>b</sup>. 
 ```{r}
-#Length Weight (mm to g, values from synoptic survey)
-#Ref: https://www.ccamlr.org/en/system/files/meeting_documents/with_cover/asam-2019-08r1.pdf (Appendix C)
 a=2.236e-06
 b=3.314
 ```
 
 To provide variance in initial biomass estimates we provide a CV for the log Biomass estimate. 
 ```{r}
-B0logsd <- 0.685
+B0logsd <- 0.361
 ```
 
 In each run, selectivity ogives are fitted by selecting a value between the minimum and maximum estimates of 50% selectivity and then using the range to provide the lengths at which the curves will rise from 0, and reach 1, passing through the selected 50%. 
@@ -110,8 +110,8 @@ selrange<-11
 In the same manner as selectivity, for each run maturity ogives are fitted by selecting a value between the minimum and maximum estimates of 50% selectivity and then using the range to provide the lengths at which the curves will rise from 0, and reach 1, passing through the selected 50%. 
 ```{r}
 #Maturity Curve
-mat50Min<-26
-mat50Max<-30
+mat50Min<-32
+mat50Max<-37
 matrange<-6
 ```
 
@@ -144,7 +144,7 @@ Running the assessment becomes a simple matter of doing `Project()` several time
 Setting `plan()` back to sequential tells R to stop parallel processing. 
 
 ```{r}
-Runs<-10000 #Set number of iterations
+Runs<-1000 #Set number of iterations
 plan(multiprocess, workers= availableCores()-2)
 df_48_1 <- future_map_dfr(1:Runs,Project,.options = furrr_options(seed = TRUE),.progress=T)
 plan(sequential)
