@@ -35,7 +35,7 @@ set.seed(31)
 # Initial parameters
 The initial parameters in this model are largely similar to those of assessments conducted in 2010 with some parameters updated with newer information. The model parameters fall into two broad categories; 1) those that are derived from data, and 2) those which are decisions as a result of discussions or likely scenarios, for example fishing season or number of time steps.
 
-We are working off a 365 day year and assume 8 age classes (0 - 7 yr). 
+We are working off a 365 day year and assume 7 age classes (1 - 7 yr). 
 
 ```{r}
 nsteps <- 365 #time steps
@@ -61,7 +61,7 @@ monitorI <- 93:107
 fishingI <- 1:365
 ```
 
-This model uses proportional recruitment estimated with a beta distribution to generate random recruit numbers. For more details see `?prRecruitsGYM`. Inputs are estimated typically from surveys where mean and variance are the proportion of krill in each haul up to a reference age class. In this case the reference age class is 2 year old, which makes them age class 3 in the model. 
+This model uses proportional recruitment estimated with a beta distribution to generate random recruit numbers. For more details see `?prRecruitsGYM`. Inputs are estimated typically from surveys where mean and variance are the proportion of krill in each haul up to a reference age class. In this case the reference age class is 2 which makes them 2+ years old. 
 
 ```{r}
 #Recruitment Variables
