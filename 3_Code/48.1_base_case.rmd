@@ -39,7 +39,7 @@ We are working off a 365 day year and assume 8 age classes (0 - 7 yr).
 
 ```{r}
 nsteps <- 365 #time steps
-Ages <- 0:7 #Age classes
+Ages <- 1:7 #Age classes
 ```
 
 Intervals are based off the time steps from a reference date. Intervals can be checked with the `check_dates()` function in the Grym package. Here the assumed reference date is the 1st of October in each year, to capture the onset of spring/summer growth. The year is largely irrelevant so long as 1) you are not using a leap year, and 2) you remember to progress a year if you are going to a month that falls before your reference date. 
