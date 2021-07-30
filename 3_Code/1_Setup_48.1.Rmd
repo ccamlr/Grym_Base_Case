@@ -1,0 +1,137 @@
+---
+title: "Setup file for 48.1 Grym simulation"
+author: "Dale Maschette"
+date: "27/07/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Introduction
+
+Here we present the setup file for the base case simulation for the *Euphausia superba* assessment within Subarea 48.1. 
+
+WG-SAM-21 and WG-EMM-21 agreed upon developing a realistic first base case prior to investigating further refinements, in order to enable a comparison of outputs between the base case and more complex implementations.
+
+This base case uses the parameters agreed upon by WG-EMM-2021 as presented in Table 1. 
+
+
+```{r, message=FALSE,echo=FALSE}
+library(Grym)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(furrr)
+set.seed(31)
+```
+
+
+The Model expects a number of parameters in order to simulate a population through time. To pass from one file to the next we will use a list structure. It is important that the naming conventions stay consistent between files. 
+
+```{r}
+Pars_list<-list() #Create an empty parameters list. 
+```
+
+We need to know the number of iterations, scenario name and area for the model. For some version control we will also record the date the file was made. 
+```{r}
+Pars_list$Iterations <- 10000
+Pars_list$Scenario   <- "Base_case"
+Pars_list$Area       <- "48.1"
+Pars_list$Date       <- Sys.time()
+```
+
+As we go through below we will fill this list with the required parameters. 
+
+# Initial parameters
+The initial parameters in this model are largely similar to those of assessments conducted in 2010 with some parameters updated with newer information. The model parameters fall into two broad categories; 1) those that are derived from data, and 2) those which are decisions as a result of discussions or likely scenarios, for example fishing season or number of time steps.
+
+We are working off a 365 day year and assume 7 age classes (1 - 7 yr). 
+
+```{r}
+Pars_list$nsteps <- 365 #time steps
+Pars_list$Ages <- 1:7 #Age classes
+```
+
+Intervals are based off the time steps from a reference date. Intervals can be checked with the `check_dates()` function in the Grym package. Here the assumed reference date is the 1st of October in each year, to capture the onset of spring/summer growth. The year is largely irrelevant so long as 1) you are not using a leap year, and 2) you remember to progress a year if you are going to a month that falls before your reference date. 
+```{r,message=FALSE}
+#reference date
+Pars_list$Reference<-"2021/10/01"
+#Spawning intervals
+check_dates(Pars_list$Reference, "2021/12/15")
+check_dates(Pars_list$Reference, "2022/02/15")
+#Monitoring intervals
+check_dates(Pars_list$Reference, "2022/01/01")
+check_dates(Pars_list$Reference, "2022/01/15")
+```
+
+```{r}
+#Interval sequences
+Pars_list$spawnI	 <- 76:138
+Pars_list$monitorI <- 93:107
+Pars_list$fishingI <- 1:365
+```
+
+This model uses proportional recruitment estimated with a beta distribution to generate random recruit numbers. For more details see `?prRecruitsGYM`. Inputs are estimated typically from surveys where mean and variance are the proportion of krill in each haul up to a reference age class. In this case the reference age class is 2 which makes them 2+ years old. 
+
+```{r}
+#Recruitment Variables
+Pars_list$R.mean     <- 0.557 
+Pars_list$R.sd       <- 0.126
+Pars_list$R.var      <- Pars_list$R.sd^2
+Pars_list$R.class    <- 2
+Pars_list$R.nsurveys <- 17
+```
+
+Growth is modeled using a seasonal von Bertalanffy model and takes the typical inputs for estimating the curve (t0, Linf and K). Growth period is estimated using f0 and f1, unlike the intervals above which are between 1 and 365, the growth period is proportion of the year and is thus between 0 and 1. So a growth period beginning on the 12th increment would have an f0 value of `12/365` or `0.03287671`. 
+
+```{r,message=FALSE}
+#Growth details 
+Pars_list$t0   <- 0
+Pars_list$K    <- 0.48
+Pars_list$Linf <- 60
+
+#Growth Period
+check_dates(Pars_list$Reference, "2021/10/21")
+check_dates(Pars_list$Reference, "2022/02/12")
+
+Pars_list$f0 <- 21/365
+Pars_list$f1 <- 135/365
+```
+
+Weight is computed from length using the formula W=aL<sup>b</sup>. 
+```{r}
+Pars_list$a <- 2.236e-06
+Pars_list$b <- 3.314
+```
+
+To provide variance in initial biomass estimates we provide a CV for the log Biomass estimate. 
+```{r}
+Pars_list$B0logsd <- 0.361
+```
+
+In each run, selectivity ogives are fitted by selecting a value between the minimum and maximum estimates of 50% selectivity and then using the range to provide the lengths at which the curves will rise from 0, and reach 1, passing through the selected 50%. 
+```{r}
+#Selectivity curve
+Pars_list$sel50Min <- 30
+Pars_list$sel50Max <- 35
+Pars_list$selrange <- 11
+```
+
+In the same manner as selectivity, for each run maturity ogives are fitted by selecting a value between the minimum and maximum estimates of 50% selectivity and then using the range to provide the lengths at which the curves will rise from 0, and reach 1, passing through the selected 50%. 
+```{r}
+#Maturity Curve
+Pars_list$mat50Min <- 32
+Pars_list$mat50Max <- 37
+Pars_list$matrange <- 6
+```
+
+Finally we save this list as an RDS object. 
+
+```{r}
+saveRDS(Pars_list, 
+        file = paste("../2_Parameters/","Setup_pars_",Pars_list$Area,"_",Pars_list$Scenario,".rds", sep=""))
+```
+

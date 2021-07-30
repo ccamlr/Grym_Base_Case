@@ -1,0 +1,154 @@
+---
+title: "Generated Recruitment Parameters"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+source("./Source/prfit.R")
+```
+
+
+## Pre-Generate
+
+To pre-generate recruitment parameters for a model run, we must
+
+1. define the within year natural mortality structure
+2. choose the quantile function that defines the distribution of the recruits, and
+3. provide the mean and variance of the proportion of recruits seen in the surveys, and the number of surveys conducted
+4. provide approximate estimate of natural mortality `M` and recruitment coefficient of variation `CV`
+5. set the number of parameter sets to generate
+
+
+
+```{r}
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(Grym))
+suppressPackageStartupMessages(library(furrr))
+set.seed(31)
+```
+
+
+
+### Model Setup
+
+We must require the vector `Msf` that defines the total mortality within a year. To generate this we need to read in the setup parameters from the 1_Setup file. 
+
+```{r}
+pars<-readRDS("../2_Parameters/Setup_pars_48.1_Base_case.rds")
+
+```
+
+
+Seven age classes, daily time steps - we start modelling from age 1.
+```{r}
+Days <- seq(0,1,length=pars$nsteps+1)
+h <- 1/pars$nsteps
+ages <- outer(Days,pars$Ages,FUN="+")
+head(ages)
+```
+
+
+Define the within year pattern of natural mortality
+```{r}
+ms <- matrix(1,pars$nsteps+1,length(pars$Ages))
+Ms <- ctrapz(ms,h) 
+Msf <- final(Ms)
+Msf
+```
+
+
+### Distribution
+
+Select the quantile function 
+```{r}
+qdist <- qInverseBeta
+recdist <- recInverseBeta
+```
+
+
+### Survey
+
+Double check the survey results
+```{r}
+pars$R.mean
+pars$R.sd
+pars$R.var
+pars$R.class
+pars$R.nsurveys
+```
+
+### Approximate
+
+Best guess estimates of the natural mortality `M` and recruitment coefficient of variation `CV`.
+The better these guesses, the faster the process will be
+```{r}
+M <- 0.5
+CV <- 0.6
+```
+
+
+### Replicates
+
+### Generate
+
+```{r}
+
+func <- function(x){prFit(qdist,Msf,pars$R.mean,pars$R.var, pars$R.nsurveys,M,CV,pars$R.class)}
+
+plan(multiprocess, workers= availableCores()-2)
+recs<- furrr::future_map_dfr(1:pars$Iterations, func, 
+                              .options = furrr_options(seed = TRUE),.progress=F ) 
+plan(sequential)
+
+
+colMeans(recs)
+```
+
+
+Compare the estimated natural mortality and recruitment CVs to the actual values 
+```{r}
+ggplot(recs,aes(x=M,y=CV))+
+  geom_point(shape=16,alpha=0.1)
+```
+
+
+Write the generated parameters to a file.
+```{r}
+saveRDS(list(R.mean=pars$R.mean,
+             R.sd=pars$R.sd,
+             R.class=pars$R.class,
+             R.nsurveys=pars$R.nsurveys,
+             qdist=qdist,
+             recdist=recdist,
+             pars=recs, 
+             Ages=pars$Ages, 
+             nsteps=pars$nsteps),
+        file=paste0("../2_Parameters/Rec_pars_",pars$Area,"_",pars$R.mean,"_",pars$R.sd,".rds"))
+```
+
+
+### Check
+
+Simulate recruitment data for a range of natural mortalities and recruitment CVs
+```{r}
+d <- recs %>% 
+  rowwise() %>% 
+  summarize(as.data.frame(t(prSim(qdist,Msf,n=pars$R.nsurveys,M,CV,r=pars$R.class))),.groups="drop") %>% 
+  as.data.frame()
+```
+
+Plot and compare to target values
+```{r}
+ggplot(d,aes(x=mnR,y=vrR))+
+  geom_point(alpha=0.1)+
+  geom_point(aes(x=pars$R.mean,y=pars$R.sd^2),col="red")+
+  theme_bw()
+
+```
+

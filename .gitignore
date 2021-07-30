@@ -4,3 +4,4 @@
 .Ruserdata
 *.rds
 *_Run*
+/3_Code/tests/*

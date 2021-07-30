@@ -1,0 +1,157 @@
+#' ## Proportional Recruitment
+#' 
+#' ### Models
+#' 
+#' To simulate and fit proportional recruitment model data, we need to define quantile functions 
+#' parameterized in terms of the mean and variance of the odds of recruits.
+#' 
+#' For inverse Beta, log Normal and Gamma distributions, define a quantile function and a function 
+#' to generate random deviates. The corresponding random recruits must be scaled by the mean.
+#' 
+## -----------------------------------------------------------------------------
+qInverseBeta <- function(us,mn,vr) { 
+  q <- qbeta(us,mn*(mn*(1+mn)+vr)/vr,mn*(1+mn)/vr+2)
+  q/(1-q)
+}
+rInverseBeta <- function(n,mn,vr) { 
+  q <- rbeta(n,mn*(mn*(1+mn)+vr)/vr,mn*(1+mn)/vr+2)
+  q/(1-q)
+}
+recInverseBeta<- function(n,mn,vr) { 
+  q <- rbeta(n,mn*(mn*(1+mn)+vr)/vr,mn*(1+mn)/vr+2)
+  q/(1-q)/mn
+}
+
+#' 
+## -----------------------------------------------------------------------------
+qLogNormal <- function(us,mn,vr) {
+  qlnorm(us,log(mn^2/sqrt(mn^2 + vr)),sqrt(log(1 + vr/mn^2)))
+}
+rLogNormal <- function(n,mn,vr) {
+  rlnorm(n,log(mn^2/sqrt(mn^2 + vr)),sqrt(log(1 + vr/mn^2)))
+}
+recLogNormal <- function(n,mn,vr) {
+  rlnorm(n,log(mn^2/sqrt(mn^2 + vr)),sqrt(log(1 + vr/mn^2)))/mn
+}
+
+#' 
+## -----------------------------------------------------------------------------
+qGamma <- function(us,mn,vr) suppressWarnings(qgamma(us,mn^2/vr,mn/vr))
+rGamma <- function(n,mn,vr) rgamma(n,mn^2/vr,mn/vr)
+recGamma <- function(n,mn,vr) rgamma(n,mn^2/vr,mn/vr)/mn
+
+#' 
+#' ### Simulation
+#' 
+#' Generate `n` random age structures and estimate mean and variance of the proportion of recruits
+#' in these samples.
+## -----------------------------------------------------------------------------
+prSim <- function(qdist,Msf,n,M,CV,r=1,plus=0,rstdunif=runif) {
+  if(!inherits(qdist, "function")) stop("qdist must be a function")
+  if(!inherits(rstdunif, "function")) stop("rstdunif must be a function")
+  if(!inherits(c(Msf,n,M,CV,r,plus), "numeric")) stop("Inputs Msf, mnR, vrR, n, M0, CV0, r and plus must all be numeric")
+  ## Generate deviates
+  us <- rstdunif(n*(1-r+length(Msf)+plus))
+
+  ## Compute survivals
+  S <- exp(-M*Msf)
+  S <- cumprod(c(S[-length(S)],rep(S[length(S)],plus)))
+  s0 <- sum(S)
+
+  S <- c(1,S)
+  if(r>1) S <- S[r:length(S)]
+    
+  ## Mean and variance of Q
+  mnQ <- 1/s0
+  vrQ <- (CV*mnQ)^2
+
+  ## Simulate
+  A <- matrix(s0*qdist(us,mnQ,vrQ),length(S))
+  N <- S*A
+  R <- N[1,]/colSums(N)
+  c(mnR=mean(R,na.rm=TRUE), vrR=sd(R,na.rm=TRUE)^2)
+}
+
+#' 
+#' 
+#' ### Stochastic Fits
+#' 
+#' A model is fitted by generating a sequence of random deviates and adjusting their distribution by 
+#' [probability integral transform](https://en.wikipedia.org/wiki/Probability_integral_transform) to 
+#' match the observed mean and variance of the proportion of recruits.  Not every sequence of deviates
+#' can be transformed to match the observed mean and variance; if the match is not within `tol` of the 
+#' observed values, the function returns `NULL`.   
+#' 
+#' 
+## -----------------------------------------------------------------------------
+prFit1 <- function(qdist,Msf,mnR,vrR,n,M0,CV0,r=1,plus=0,rstdunif=runif,tol=1.0E-6) {
+  if(!inherits(qdist, "function")) stop("qdist must be a function")
+  if(!inherits(rstdunif, "function")) stop("rstdunif must be a function")
+  if(!inherits(c(Msf,mnR,vrR,n,M0,CV0,r,plus), "numeric")) stop("Inputs Msf, mnR, vrR, n, M0, CV0, r and plus must all be numeric")
+  ## Generate deviates
+  us <- runif(n*(1-r+length(Msf)+plus))
+  
+  err <- function(par) {
+    ## Compute survivals
+    S <- exp(-par[1]*Msf)
+    S <- cumprod(c(S[-length(S)],rep(S[length(S)],plus)))
+    s0 <- sum(S)
+
+    S <- c(1,S)
+    if(r>1) S <- S[r:length(S)]
+    
+    ## Mean and variance of Q
+    mnQ <- 1/s0
+    vrQ <- (par[2]*mnQ)^2
+
+    ## Simulate
+    A <- matrix(s0*qdist(us,mnQ,vrQ),length(S))
+    N <- S*A
+    R <- N[1,]/colSums(N)
+    (mnR-mean(R,na.rm=TRUE))^2+(sqrt(vrR)-sd(R,na.rm=TRUE))^2
+  }
+  
+  ## Fit the model
+  fit <- tryCatch(optim(c(M=M0,CV=CV0),fn=err,method="L-BFGS-B",lower=c(0,0)),
+                  error=function(.) NULL)
+
+  ## Recompute parameters
+  if(!is.null(fit) && fit$value < tol) {
+    par <- unname(fit$par)
+    ## Compute survivals
+    S <- exp(-par[1]*Msf)
+    S <- cumprod(c(S[-length(S)],rep(S[length(S)],plus)))
+    s0 <- sum(S)
+
+    S <- c(1,S)
+    if(r>1) S <- S[r:length(S)]
+    
+    ## Mean and variance of Q
+    mnQ <- 1/s0
+    vrQ <- (par[2]*mnQ)^2
+
+    c(M=par[1],CV=par[2],mnQ=mnQ,vrQ=vrQ)  
+  }
+}
+
+#' 
+#' 
+#' This version repeatedly tries to fit to model, restarting with a new sequence of random deviates
+#' if a fit fails.  If `max.iter` is not set, this function may never return.
+## -----------------------------------------------------------------------------
+prFit <- function(qdist,Msf,mnR,vrR,n,M0,CV0,r=1,plus=0,rstdunif=runif,tol=1.0E-6,max.iter=Inf) {
+  if(!inherits(qdist, "function")) stop("qdist must be a function")
+  if(!inherits(rstdunif, "function")) stop("rstdunif must be a function")
+  if(!inherits(c(Msf,mnR,vrR,n,M0,CV0,r,plus), "numeric")) stop("Inputs Msf, mnR, vrR, n, M0, CV0, r and plus must all be numeric")
+  k <- 1
+  repeat {
+    k <- k+1
+    fit <- prFit1(qdist,Msf,mnR,vrR,n,M0,CV0,r,plus,rstdunif,tol)
+    if(!is.null(fit) | k>max.iter) return(fit)
+  }
+}
+
+#' 
+#' 
+
+#' 

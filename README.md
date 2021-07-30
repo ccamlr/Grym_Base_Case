@@ -14,6 +14,11 @@ The idea for having a base case is to essentially have assessments that are read
 A short video describing how the Grym will be used to determine sustainable yield is available [here](https://youtu.be/jekkTxbo_r8).
 
 
+
+
+
+
+
 ## Grym package installation and use instructions
 
 If you have not done so yet, download and install R (https://cloud.r-project.org/) and Rstudio (https://rstudio.com/products/rstudio/download/#download).
@@ -133,7 +138,7 @@ The code is designed to work in three tiers, at the bottom is the `Projection_fu
 The reason for this structure is:
   1. The `Projection_function.R` contains the `KrillProjection()` function that will be used for each run of the Grym and has no hard coded or default biological parameter values. Once the base cases are done, in order to try different implementations this file would just need to be copied and renamed and then the `KrillProjection()` function modified for the desired implementation which is then easily passed up to each Subarea assessment. 
   2. Having each Subarea in their own Rmarkdown means that we can work on getting one area right first explaining where its values come from and how they are calculated and then quickly rolling it out to the other Subareas, it also means you can quickly test other implementations by only applying them to a single area first and making modifications where needed before rolling them out to other areas. 
-  3. Finally having an overarching file means you can run all the subareas at once when you are happy with your models and have them in one document.  
+ 
   
 - The folder '2_Parameters' contains some preliminary parameter values. 
 
@@ -141,10 +146,19 @@ The reason for this structure is:
 
 
 #### About the code as it is now
+Moving away slightly from the GrymExamples package, the code is designed to work as a three step process working on an underlying list structure for parameters. This is largely a result of wanting better consistency for recruitment between runs where recruitment parameters dont change. 
 
-- The `Projection_function.R` as it is now will produce consistent results with the 2010 example when given the same input values. 
-- The function itself could use some more comments on what is happening at each step and Simon and Dale will work on that soon. 
-- Naming conventions have tried to stay consistent with the examples in the GrymExamples package as much as possible. - There is two flow charts in the flow-charts.html which are a work in progress (the colors need fixing) which show in both overly simplified, and very detailed, how the Grym is constructed in `KrillProjection` function. 
-- Having started with 48.1 the `48.1_base_case.rmd` provides detailed steps for each of the parameter inputs to the projections, but the overall document is still a work in progress.
-- The rest of the Subareas will be implemented once agreement over parameter values has been reached. 
+The three steps consist of: 
+
+1. Setup
+2. Generate Recruitment
+3. Run projection
+
+Within the setup file we build the list of parameters for our simulations. 
+
+To generate recruitment we then use that list and generate as many recruitment vectors as required for the simulations and save it as a list. 
+
+Lastly, we use both these lists to run our simulation projections. 
+
+
 

@@ -1,0 +1,129 @@
+---
+title: "Krill Simulation Projections"
+author: "Dale Maschette"
+date: "27/07/2021"
+output: html_document
+---
+
+```{r}
+library(Grym)
+library(furrr)
+library(dplyr)
+library(ggplot2)
+```
+
+The first thing we need to do is read in the parameters from the 1_setup file and the 2_recruitment file. 
+
+```{r}
+pars<-readRDS("../2_Parameters/Setup_pars_48.1_Base_case.rds")
+
+recs<-readRDS(paste0("../2_Parameters/Rec_pars_",pars$Area,"_",pars$R.mean,"_",pars$R.sd,".rds"))
+```
+
+```{r}
+source('./Source/check_params.R')
+check_params(pars, recs)
+```
+
+
+
+# Running the model.
+Now that the model parameters have been set, we load the `KrillProjection` function. 
+
+```{r}
+source('./Source/Projection_function.R')
+```
+
+We then put all our input parameters into the `KrillProjection` function (in this order) and create the `Project` function. Each time we run `Project()` an individual run of the Grym is executed.
+
+```{r}
+
+Project<-KrillProjection(pars$nsteps, pars$Ages,					 #time step numbers and age classes
+								 pars$spawnI,pars$monitorI,pars$fishingI,			 #Interval sequences
+								 pars$R.mean,pars$R.var,pars$R.class,pars$R.nsurveys,#Recruitment Variables
+								 pars$t0,pars$K,pars$Linf,pars$f0,pars$f1,								 #Growth details 
+								 pars$a, pars$b, 								 					 #Length/Weight Details
+								 pars$sel50Min,	pars$sel50Max,	pars$selrange,	 #Selectivity Parameters
+								 pars$mat50Min,	pars$mat50Max,	pars$matrange,  #Maturity parameters
+								 pars$B0logsd,
+								 prRecruitPars=recs$pars, prRecruit=recs$recdist,
+								 gamma=seq(0,0.15,by=0.01),      #gammas to test
+								 n.years=20                      #Number of years
+								 )
+```
+
+Running the assessment becomes a simple matter of doing `Project()` several times. 
+The number of runs cannot exceed the number of sets of pre-generated recruitment parameters.
+```{r}
+Runs <- pars$Iterations
+Runs
+```
+
+We use `future_map_dfr()` from the furrr package to perform runs in parallel to significantly speed up the assessments. 
+`plan()` sets up the type of processing to be used (multiprocess) and the number or cores to be used (workers), which here we have set to the number of cores available minus two. It is wise not to have the number of cores used >= the number of cores available. Setting `plan()` back to sequential tells R to stop parallel processing. 
+```{r}
+plan(multiprocess, workers= availableCores()-2)
+df_48_1 <- future_map_dfr(1:Runs,Project,.options = furrr_options(seed = TRUE),.progress=T)
+plan(sequential)
+```
+
+Save the Grym output for record. 
+
+```{r}
+saveRDS(df_48_1, 
+        file= paste0("Grym_output_",pars$Area,"_",pars$Scenario,".rds"))
+```
+
+
+# Evaluating the results
+
+The decision rules for krill are: 
+	
+1. Choose a yield, gamma1, so that the probability of the spawning biomass dropping below 20% of its median pre-exploitation level over a 20-year harvesting period is 10%.
+
+2. Choose a yield, gamma2, so that the median escapement at the end of a 20 year period is 75% of the median pre-exploitation level.
+
+3. Select the lower of gamma1 and gamma2 as the yield.
+
+gamma1:
+```{r, warning=FALSE}
+Gamma1 <- df_48_1 %>% group_by(Gamma,Run) %>% 
+	summarize(Dep=min(SSB/SSB0)) %>% 
+	summarize(Pr=mean(Dep < 0.2))
+Gamma1
+#Given the gamma values tested, gamma 1 is:
+Gamma_1 <- max(Gamma1$Gamma[Gamma1$Pr<=0.1])
+Gamma_1
+
+#What is the approximate Gamma that meets 10% depletion to test.
+approx(Gamma1$Pr,Gamma1$Gamma,0.1)$y
+```
+
+gamma2: 
+```{r}
+#Gamma 2:
+Gamma2 <- df_48_1 %>%  group_by(Gamma) %>% 
+	filter(Year %in% max(Year)) %>% 
+	summarise(ssb=median(SSB),ssb0=median(SSB0))
+
+Gamma2$Escapement<-Gamma2$ssb/Gamma2$ssb0
+
+Gamma2
+
+#Given the gamma values tested, gamma 2 is:
+Gamma_2<-max(Gamma2$Gamma[Gamma2$Escapement>=0.75])
+
+#What is the approximate Gamma that meets 75% escapement to test.
+approx(Gamma2$Escapement,Gamma2$Gamma,0.75)$y
+
+```
+
+Select the gamma which is lowest. 
+```{r}
+#The actual Gamma is the smallest of the two gammas:
+GammaToUse<-which(c(Gamma_1,Gamma_2)==min(Gamma_1,Gamma_2)) #Which gamma is min?
+if(length(GammaToUse)==2){GammaToUse=3} #when gamma1 and gamma2 are equal
+OUT<-cbind(Gamma_1,Gamma_2,GammaToUse)
+OUT
+```
+
