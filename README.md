@@ -133,32 +133,20 @@ Because the repository will change over time, you must keep your version, on you
 
 #### A few points about this repository
 #### Structure:
-The code is designed to work in three tiers, at the bottom is the `Projection_function.R`, in the middle is an Rmarkdown for each Subarea (e.g. `48.1_base_case.rmd`), and at the top is an Rmarkdown which pulls together each Subarea Rmarkdown into one document.  
+The code is designed to work in two tiers, at the bottom is the core functions use to produce the assessment for example: `Projection_function.R`,`prfit.r`, above this sits the three Rmarkdown documents `1_Setup_48.1.rmd`, `2_Generate_recruitment.rmd` and `3_Projection_48.1.rmd`. The idea being for each scenario you create a copy of the 1_Setup file and have the approporiate scenario parameters. If you are using new recruitment values or your time steps/age classes change you run the 2_Generate_recruitment file giving it the list from the setup file. Finally you run the 3_Projection file to actually run the simulation.   
+
 
 The reason for this structure is:
-  1. The `Projection_function.R` contains the `KrillProjection()` function that will be used for each run of the Grym and has no hard coded or default biological parameter values. Once the base cases are done, in order to try different implementations this file would just need to be copied and renamed and then the `KrillProjection()` function modified for the desired implementation which is then easily passed up to each Subarea assessment. 
-  2. Having each Subarea in their own Rmarkdown means that we can work on getting one area right first explaining where its values come from and how they are calculated and then quickly rolling it out to the other Subareas, it also means you can quickly test other implementations by only applying them to a single area first and making modifications where needed before rolling them out to other areas. 
- 
-  
-- The folder '2_Parameters' contains some preliminary parameter values. 
+  1. The .R files in the Source folder don't change for example the `Projection_function.R` contains the `KrillProjection()` function that will be used for each run of the Grym and has no hard coded or default biological parameter values.  
 
-- The folder '3_Code' contains the `Projection_function.R` file and the Subarea-specific markdowns when they have been developed. 
+  2. For each scenario you create a copy of the markdown documents and explain how that scenario is different. 
 
+The folder '2_Parameters' the scenario setup lists as .rds files, and the recruitment series as .rds. These files are written by the 1_Setup and 2_Generate_recruitment markdowns respectively. If the files are used properly than the setup files will have the naming format: Setup_pars_AREA_SCENARIONAME.rds, Similarly the recruitment file will be: Rec_pars_AREA_RMEAN_RSD.rds where the all caps parts are replaced by their respective values. 
 
-#### About the code as it is now
-Moving away slightly from the GrymExamples package, the code is designed to work as a three step process working on an underlying list structure for parameters. This is largely a result of wanting better consistency for recruitment between runs where recruitment parameters dont change. 
+A note on recruitment; generating recruitment is the slowest part of the assessment that is one of the reasons it is done before the projection, the other being if you want to for example test the difference of changing the length-weight relationship, this method allows you to do that knowing that when you compare the scenarios they are using the exact same recruitment series. You do not need to generate a new recruitment series unless you change any of the following parameters: **R.mean, R.sd, R.var, R.Class, R.nsurveys, nsteps or Ages** in the setup file from what was used to generate the recruitment series. The function `check_params()` in the 3_Projection file compares the setup and recruitment parameters to make sure that they match and will return an error if they dont. 
 
-The three steps consist of: 
+- The folder '3_Code' contains the Setup, Recruitment and Projection markdowns with the 'Source' folder containing the functions used in the assessment which shouldn't change.
 
-1. Setup
-2. Generate Recruitment
-3. Run projection
-
-Within the setup file we build the list of parameters for our simulations. 
-
-To generate recruitment we then use that list and generate as many recruitment vectors as required for the simulations and save it as a list. 
-
-Lastly, we use both these lists to run our simulation projections. 
 
 
 
