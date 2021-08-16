@@ -43,6 +43,13 @@ Pars_list$Area       <- "48.1"
 Pars_list$Date       <- Sys.time()
 ```
 
+Check that this scenario has not been run
+```{r}
+filename<-paste("../2_Parameters/","Setup_pars_",Pars_list$Area,"_",Pars_list$Scenario,".rds", sep="")
+
+file.exists(filename)
+```
+
 As we go through below we will fill this list with the required parameters. 
 
 # Initial parameters
@@ -132,6 +139,6 @@ Finally we save this list as an RDS object.
 
 ```{r}
 saveRDS(Pars_list, 
-        file = paste("../2_Parameters/","Setup_pars_",Pars_list$Area,"_",Pars_list$Scenario,".rds", sep=""))
+        file = filename)
 ```
 
