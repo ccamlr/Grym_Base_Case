@@ -35,7 +35,7 @@ set.seed(31)
 
 ```{r}
 scens<-list.files("../2_Parameters/Setup_files/")
-tests<-scens[seq(from=1, to=31, by=6)]
+tests<-scens[seq(from=1, to=37, by=6)]
 ```
 
 
@@ -44,7 +44,7 @@ tests<-scens[seq(from=1, to=31, by=6)]
 We must require the vector `Msf` that defines the total mortality within a year. To generate this we need to read in the setup parameters from the 1_Setup file. 
 
 ```{r, echo=FALSE}
-pars<-readRDS(paste0("../2_Parameters/Setup_files/",tests[6] ))
+pars<-readRDS(paste0("../2_Parameters/Setup_files/",tests[7] ))
 
 file_read<-FALSE
 if(file.exists(paste0("../2_Parameters/Recruitment_vectors/", pars$rec_file))){
@@ -117,12 +117,14 @@ recs<- furrr::future_map_dfr(1:pars$Iterations, func,
                               .options = furrr_options(seed = TRUE),.progress=T ) 
 plan(sequential)
 
-colMeans(recs)
+
 ```
 
 
 Compare the estimated natural mortality and recruitment CVs to the actual values 
 ```{r}
+colMeans(recs)
+
 ggplot(recs,aes(x=M,y=CV))+
   geom_point(shape=16,alpha=0.1)
 ```
