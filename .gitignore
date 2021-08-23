@@ -2,6 +2,9 @@
 .Rhistory
 .RData
 .Ruserdata
-*.rds
+*Proj_
 *_Run*
 /3_Code/tests/*
+Krill_simulation*
+*Proj_*
+/4_Output/Projections/*
