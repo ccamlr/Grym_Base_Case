@@ -135,6 +135,11 @@ Pars_list$mat50Max <- 37
 Pars_list$matrange <- 6
 ```
 
+names for the recruitment file
+```{r}
+Pars_list$rec_file <- paste0("Rec_pars_", Pars_list$Area,"_", Pars_list$R.mean,"_",Pars_list$R.sd,".rds")
+```
+
 Finally we save this list as an RDS object. 
 
 ```{r}

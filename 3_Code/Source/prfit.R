@@ -47,9 +47,7 @@ recGamma <- function(n,mn,vr) rgamma(n,mn^2/vr,mn/vr)/mn
 #' in these samples.
 ## -----------------------------------------------------------------------------
 prSim <- function(qdist,Msf,n,M,CV,r=1,plus=0,rstdunif=runif) {
-  if(!inherits(qdist, "function")) stop("qdist must be a function")
-  if(!inherits(rstdunif, "function")) stop("rstdunif must be a function")
-  if(!inherits(c(Msf,n,M,CV,r,plus), "numeric")) stop("Inputs Msf, mnR, vrR, n, M0, CV0, r and plus must all be numeric")
+
   ## Generate deviates
   us <- rstdunif(n*(1-r+length(Msf)+plus))
 
@@ -84,10 +82,8 @@ prSim <- function(qdist,Msf,n,M,CV,r=1,plus=0,rstdunif=runif) {
 #' 
 #' 
 ## -----------------------------------------------------------------------------
-prFit1 <- function(qdist,Msf,mnR,vrR,n,M0,CV0,r=1,plus=0,rstdunif=runif,tol=1.0E-6) {
-  if(!inherits(qdist, "function")) stop("qdist must be a function")
-  if(!inherits(rstdunif, "function")) stop("rstdunif must be a function")
-  if(!inherits(c(Msf,mnR,vrR,n,M0,CV0,r,plus), "numeric")) stop("Inputs Msf, mnR, vrR, n, M0, CV0, r and plus must all be numeric")
+prFit1 <- function(qdist,Msf,mnR,vrR,n,M0,CV0,r=1,plus=0,rstdunif=runif,tol=1.0E-6,max.M=10,max.CV=10) {
+
   ## Generate deviates
   us <- runif(n*(1-r+length(Msf)+plus))
   
@@ -112,11 +108,11 @@ prFit1 <- function(qdist,Msf,mnR,vrR,n,M0,CV0,r=1,plus=0,rstdunif=runif,tol=1.0E
   }
   
   ## Fit the model
-  fit <- tryCatch(optim(c(M=M0,CV=CV0),fn=err,method="L-BFGS-B",lower=c(0,0)),
-                  error=function(.) NULL)
-
+  fit <- tryCatch(optim(c(M=M0,CV=CV0),fn=err,method="L-BFGS-B",lower=c(0,0),upper=c(max.M,max.CV)),
+                  error=function(.) NULL, warning=function(.) NULL)
+  
   ## Recompute parameters
-  if(!is.null(fit) && fit$value < tol) {
+  if(!is.null(fit) && fit$value < tol && fit$par[1] < max.M && fit$par[2] < max.CV) {
     par <- unname(fit$par)
     ## Compute survivals
     S <- exp(-par[1]*Msf)
@@ -139,18 +135,16 @@ prFit1 <- function(qdist,Msf,mnR,vrR,n,M0,CV0,r=1,plus=0,rstdunif=runif,tol=1.0E
 #' This version repeatedly tries to fit to model, restarting with a new sequence of random deviates
 #' if a fit fails.  If `max.iter` is not set, this function may never return.
 ## -----------------------------------------------------------------------------
-prFit <- function(qdist,Msf,mnR,vrR,n,M0,CV0,r=1,plus=0,rstdunif=runif,tol=1.0E-6,max.iter=Inf) {
-  if(!inherits(qdist, "function")) stop("qdist must be a function")
-  if(!inherits(rstdunif, "function")) stop("rstdunif must be a function")
-  if(!inherits(c(Msf,mnR,vrR,n,M0,CV0,r,plus), "numeric")) stop("Inputs Msf, mnR, vrR, n, M0, CV0, r and plus must all be numeric")
+prFit <- function(qdist,Msf,mnR,vrR,n,M0,CV0,r=1,plus=0,rstdunif=runif,tol=1.0E-6,max.M=10,max.CV=10,max.iter=Inf) {
   k <- 1
   repeat {
     k <- k+1
-    fit <- prFit1(qdist,Msf,mnR,vrR,n,M0,CV0,r,plus,rstdunif,tol)
+    fit <- prFit1(qdist,Msf,mnR,vrR,n,M0,CV0,r,plus,rstdunif,tol,max.M,max.CV)
     if(!is.null(fit) | k>max.iter) return(fit)
   }
 }
 
+#' 
 #' 
 #' 
 

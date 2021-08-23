@@ -33,15 +33,26 @@ suppressPackageStartupMessages(library(furrr))
 set.seed(31)
 ```
 
+```{r}
+scens<-list.files("../2_Parameters/Setup_files/")
+tests<-scens[seq(from=1, to=31, by=6)]
+```
 
 
 ### Model Setup
 
 We must require the vector `Msf` that defines the total mortality within a year. To generate this we need to read in the setup parameters from the 1_Setup file. 
 
-```{r}
-pars<-readRDS("../2_Parameters/Setup_pars_48.1_Base_case.rds")
+```{r, echo=FALSE}
+pars<-readRDS(paste0("../2_Parameters/Setup_files/",tests[6] ))
 
+file_read<-FALSE
+if(file.exists(paste0("../2_Parameters/Recruitment_vectors/", pars$rec_file))){
+  warning("recruitment file already exists, reading in recruits")
+  recs<-readRDS(paste0("../2_Parameters/Recruitment_vectors/", pars$rec_file))
+  recs<-recs$pars
+  file_read<-file.exists(paste0("../2_Parameters/Recruitment_vectors/", pars$rec_file))
+}
 ```
 
 
@@ -88,8 +99,8 @@ pars$R.nsurveys
 Best guess estimates of the natural mortality `M` and recruitment coefficient of variation `CV`.
 The better these guesses, the faster the process will be
 ```{r}
-M <- 0.5
-CV <- 0.6
+M <- 0.6
+CV <- 1
 ```
 
 
@@ -97,15 +108,14 @@ CV <- 0.6
 
 ### Generate
 
-```{r}
+```{r, eval= !file_read}
 
 func <- function(x){prFit(qdist,Msf,pars$R.mean,pars$R.var, pars$R.nsurveys,M,CV,pars$R.class)}
 
 plan(multiprocess, workers= availableCores()-2)
 recs<- furrr::future_map_dfr(1:pars$Iterations, func, 
-                              .options = furrr_options(seed = TRUE),.progress=F ) 
+                              .options = furrr_options(seed = TRUE),.progress=T ) 
 plan(sequential)
-
 
 colMeans(recs)
 ```
@@ -119,7 +129,7 @@ ggplot(recs,aes(x=M,y=CV))+
 
 
 Write the generated parameters to a file.
-```{r}
+```{r, eval= !file_read}
 saveRDS(list(R.mean=pars$R.mean,
              R.sd=pars$R.sd,
              R.class=pars$R.class,
@@ -129,7 +139,7 @@ saveRDS(list(R.mean=pars$R.mean,
              pars=recs, 
              Ages=pars$Ages, 
              nsteps=pars$nsteps),
-        file=paste0("../2_Parameters/Rec_pars_",pars$Area,"_",pars$R.mean,"_",pars$R.sd,".rds"))
+        file=paste0("../2_Parameters/Recruitment_vectors/",pars$rec_file))
 ```
 
 

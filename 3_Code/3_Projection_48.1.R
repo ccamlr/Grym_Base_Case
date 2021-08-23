@@ -1,42 +1,36 @@
----
-title: "Krill Simulation Projections"
-author: "Dale Maschette"
-date: "27/07/2021"
-output: html_document
----
-
-```{r}
 library(Grym)
 library(furrr)
 library(dplyr)
 library(ggplot2)
-```
+source('./Source/check_params.R')
+source('./Source/Projection_function.R')
 
-The first thing we need to do is read in the parameters from the 1_setup file and the 2_recruitment file. 
+scens <- list.files("../2_Parameters/Setup_files/")
+init<-c(seq(0,0.08, by=0.02), seq(0.085, 0.135, by=0.002))
+rec1<-c(seq(0,0.014, by=0.002),0.02,0.03, seq(0.04, 0.056, by=0.002))
+rec2<-c(seq(0,0.026, by=0.002),0.02,0.03, seq(0.04, 0.056, by=0.002))
+rec3<-c(seq(0,0.02, by=0.001))
+rec4<-c(seq(0,0.02, by=0.001))
+rec5<-c(0,seq(0.06,0.095, by=0.001))
 
-```{r}
-pars<-readRDS("../2_Parameters/Setup_files/Setup_pars_48.1_Initial_values.rds")
+testvals<-list(init, init, init, init, init, init, 
+     rec1,rec1,rec1,rec1,rec1, rec1,
+     rec2,rec2,rec2,rec2,rec2,rec2,
+     rec3,rec3,rec3,rec3,rec3,rec3,
+     rec4,rec4,rec4,rec4,rec4,rec4,
+     rec5,rec5,rec5,rec5,rec5,rec5)
+
+tictoc::tic()
+
+for(i in 1:length(scens)){
+  print(paste("starting ", scens[i]))
+pars<-readRDS(paste0("../2_Parameters/Setup_files/", scens[i]))
 
 recs<-readRDS(paste0("../2_Parameters/Recruitment_vectors/Rec_pars_",pars$Area,"_",pars$R.mean,"_",pars$R.sd,".rds"))
-```
 
-```{r}
-source('./Source/check_params.R')
 check_params(pars, recs)
-```
 
 
-
-# Running the model.
-Now that the model parameters have been set, we load the `KrillProjection` function. 
-
-```{r}
-source('./Source/Projection_function.R')
-```
-
-We then put all our input parameters into the `KrillProjection` function (in this order) and create the `Project` function. Each time we run `Project()` an individual run of the Grym is executed.
-
-```{r}
 
 Project<-KrillProjection(pars$nsteps, pars$Ages,					 #time step numbers and age classes
 								 pars$spawnI,pars$monitorI,pars$fishingI,			 #Interval sequences
@@ -47,49 +41,24 @@ Project<-KrillProjection(pars$nsteps, pars$Ages,					 #time step numbers and age
 								 pars$mat50Min,	pars$mat50Max,	pars$matrange,  #Maturity parameters
 								 pars$B0logsd,
 								 prRecruitPars=recs$pars, prRecruit=recs$recdist,
-								 gamma=seq(0,0.15,by=0.01),      #gammas to test
+								 gamma=testvals[[i]],#gammas to test
 								 n.years=20                      #Number of years
 								 )
-```
 
-Running the assessment becomes a simple matter of doing `Project()` several times. 
-The number of runs cannot exceed the number of sets of pre-generated recruitment parameters.
-```{r}
 Runs <- pars$Iterations
 Runs
-```
 
-We use `future_map_dfr()` from the furrr package to perform runs in parallel to significantly speed up the assessments. 
-`plan()` sets up the type of processing to be used (multiprocess) and the number or cores to be used (workers), which here we have set to the number of cores available minus two. It is wise not to have the number of cores used >= the number of cores available. Setting `plan()` back to sequential tells R to stop parallel processing. 
-```{r}
-plan(multiprocess, workers= availableCores()-2)
+plan(multiprocess, workers= availableCores()-1)
 df_48_1 <- future_map_dfr(1:Runs,Project,.options = furrr_options(seed = TRUE),.progress=T)
 plan(sequential)
-```
 
-Save the Grym output for record. 
-
-```{r}
 df_48_1$Scenario <- pars$Scenario
 
 saveRDS(df_48_1, 
         file= paste0("../4_Output/Projections/",pars$proj_file))
-```
 
-
-# Evaluating the results
-
-The decision rules for krill are: 
-	
-1. Choose a yield, gamma1, so that the probability of the spawning biomass dropping below 20% of its median pre-exploitation level over a 20-year harvesting period is 10%.
-
-2. Choose a yield, gamma2, so that the median escapement at the end of a 20 year period is 75% of the median pre-exploitation level.
-
-3. Select the lower of gamma1 and gamma2 as the yield.
-
-gamma1:
-```{r, warning=FALSE}
 results <- list()
+results$Scenario <-  pars$Scenario
 results$Gamma1 <- df_48_1 %>% group_by(Gamma,Run) %>% 
 	summarize(Dep=min(SSB/SSB0)) %>% 
 	summarize(Pr=mean(Dep < 0.2))
@@ -102,10 +71,7 @@ results$Gamma_1
 results$test_gamma_1 <-approx(results$Gamma1$Pr,results$Gamma1$Gamma,0.1)$y
 results$test_gamma_1
 
-```
 
-gamma2: 
-```{r}
 #Gamma 2:
 results$Gamma2 <- df_48_1 %>%  group_by(Gamma) %>% 
 	filter(Year %in% max(Year)) %>% 
@@ -121,21 +87,17 @@ results$Gamma_2<-max(results$Gamma2$Gamma[results$Gamma2$Escapement>=0.75])
 #What is the approximate Gamma that meets 75% escapement to test.
 results$test_gamma_2 <- approx(results$Gamma2$Escapement,results$Gamma2$Gamma,0.75)$y
 results$test_gamma_2
-```
 
-Select the gamma which is lowest. 
-```{r}
 #The actual Gamma is the smallest of the two gammas:
 results$GammaToUse<-which(c(results$Gamma_1,results$Gamma_2)==
                             min(results$Gamma_1,results$Gamma_2)) #Which gamma is min?
 if(length(results$GammaToUse)==2){results$GammaToUse=3} #when gamma1 and gamma2 are equal
-results$Selected_gamma<-as.data.frame(cbind(results$Gamma_1, results$Gamma_2,results$GammaToUse))
-names(results$Selected_gamma) <- c("Gamma_1", "Gamma_2", "Gamma_choice")
+results$Selected_gamma<-as.data.frame(cbind(results$Gamma_1, results$Gamma_2,
+                                            results$GammaToUse,results$Scenario))
+names(results$Selected_gamma) <- c("Gamma_1", "Gamma_2", "Gamma_choice", "Scenario")
 results$Selected_gamma
-```   
 
-
-```{r}
 saveRDS(results, file=paste0("../4_Output/Selected_gamma/","Selected_gamma_",pars$proj_file))
-```
+}
 
+tictoc::toc()

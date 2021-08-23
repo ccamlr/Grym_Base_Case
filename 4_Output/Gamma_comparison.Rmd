@@ -1,0 +1,48 @@
+---
+title: "Scenario yields"
+author: "Dale Maschette"
+date: "22/08/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+Read in the scenario results. 
+
+```{r}
+suppressPackageStartupMessages(library(tidyverse))
+library(Grym)
+suppressPackageStartupMessages(library(flextable))
+library(readxl)
+```
+
+```{r}
+Scenarios<-read_xlsx("../Grym_parameter_combinations.xlsx")
+Scenarios <- Scenarios %>%  select("Scenarios", "Source", "Recruitment group",  "Mean proportional recruitment", "SD of proportional recruitment", "N. surveys", "Min length, 50% mature (mm)", "Max length, 50% mature (mm)", "Range over which maturity occurs (mm)", "Weight-length parameter - A (g)", "Weight-length parameter - B")
+
+```
+
+
+```{r}
+results <- list.files("../4_Output/Selected_gamma/")
+results <- results[-c(1,2)]
+Scens <- str_match(results, "48.1_\\s*(.*?)\\s*.rds")[,2]
+
+
+results <- purrr::map(results, ~readRDS(paste0("../4_Output/Selected_gamma/", .x)))
+
+```
+
+```{r}
+yields <- map_dfr(results, ~data.frame(Gamma_1=round(.x$test_gamma_1,4),
+                                       Gamma_2=round(.x$test_gamma_2,4), 
+                                       GammaToUse=.x$GammaToUse))
+yields <- cbind(Scens, yields)
+
+res <- left_join(Scenarios, yields, by=c("Scenarios"="Scens"))
+res$Gamma_1[is.na(res$Gamma_1)]<-0.0000
+flextable(res)
+```
+
