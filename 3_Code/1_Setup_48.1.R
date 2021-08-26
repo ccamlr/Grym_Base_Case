@@ -65,7 +65,7 @@ Pars_list$selrange <- 11
 #Maturity Curve
 Pars_list$mat50Min <- Scenarios$`Min length, 50% mature (mm)`[i]
 Pars_list$mat50Max <- Scenarios$`Max length, 50% mature (mm)`[i]
-Pars_list$matrange <- Scenarios$`Range over which selection occurs (mm)`[i]
+Pars_list$matrange <- Scenarios$`Range over which maturity occurs (mm)`[i]
 
 Pars_list$rec_file <- paste0("Rec_pars_", Pars_list$Area,"_",
                              Pars_list$R.mean,"_",Pars_list$R.sd,".rds")
