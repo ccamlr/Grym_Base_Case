@@ -1,6 +1,6 @@
 # Grym_Base_Case
 
-##Please note this is the currently accepted version of the krill stock assessment. 
+## Please note this is the currently accepted version of the krill stock assessment. 
 
 The idea of this repository is to provide a base case implementation of the Grym assessment for <i>E. superba</i>.
 The base cases will be performed using the same basic configuration as the assessments evaluated in during the 2010 WG-EMM that were fitted using the GYM software with the following changes: 
